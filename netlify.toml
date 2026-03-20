@@ -1,14 +1,8 @@
 [build]
-  functions = "netlify/functions"
+  publish = "."
+  edge_functions = "netlify/edge-functions"
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/.netlify/functions/chat"
+  to = "/netlify/edge-functions/chat"
   status = 200
-
-[[headers]]
-  for = "/.netlify/functions/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Headers = "Content-Type"
-    Access-Control-Allow-Methods = "POST, OPTIONS"
