@@ -3,6 +3,6 @@
   edge_functions = "netlify/edge-functions"
 
 [[redirects]]
-  from = "/.netlify/functions/chat"
-  to = "/netlify/edge-functions/chat"
+  from = "/*"
+  to = "/index.html"
   status = 200
