@@ -2,10 +2,6 @@
   publish = "."
   edge_functions = "netlify/edge-functions"
 
-[[edge_functions]]
-  path = "/.netlify/functions/chat"
-  function = "chat"
-
 [[redirects]]
   from = "/*"
   to = "/index.html"
