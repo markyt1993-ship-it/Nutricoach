@@ -57,19 +57,3 @@ export default async (request, context) => {
 };
 
 export const config = { path: '/.netlify/functions/chat' };
-```
-
-5. Click **Commit new file**
-
----
-
-### Step 3 — Verify in Netlify
-After the auto-deploy completes (~1 min), go to **Netlify → your site → Functions tab** — you should see `chat` listed as an Edge Function. Then test the chat widget.
-
-Your repo should end up looking like:
-```
-index.html
-netlify.toml
-netlify/
-  edge-functions/
-    chat.js
