@@ -1,8 +1,3 @@
-bash
-
-cat /home/claude/nutricoach-fixed/netlify/functions/chat.js
-Output
-
 const https = require('https');
 
 exports.handler = async (event) => {
