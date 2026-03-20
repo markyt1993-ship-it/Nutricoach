@@ -56,4 +56,4 @@ export default async (request, context) => {
   }
 };
 
-export const config = { path: '/.netlify/functions/chat' };
+export const config = { path: '/api/chat' };
