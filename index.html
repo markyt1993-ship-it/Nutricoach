@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NutriCoach — Coaching Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
   --bg: #080c0a; --surface: #0f1510; --surface2: #162019;
@@ -434,13 +436,21 @@ body.has-modebar .app{padding-top:94px}
   .client-badge span{display:none}
   .page-title{font-size:1.7rem}
   .stat-row{grid-template-columns:repeat(2,1fr);gap:0.5rem}
-  .section{padding:1rem 0.85rem}
+  .section{padding:1rem 0.85rem 5rem}
   .mode-bar{height:32px;gap:0.6rem;font-size:0.65rem}
   body.has-modebar .app{padding-top:90px}
   .tier-card .tier-body{padding:0.65rem 0.85rem 0.85rem}
   .mp-day-summary{gap:0.35rem;padding:0.6rem 0.75rem}
   .mp-meal-cals{font-size:0.72rem}
+  .nav-tabs{display:none}
+  #mobile-nav{display:flex}
 }
+
+/* ── MOBILE BOTTOM NAV ── */
+#mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;height:58px;background:rgba(8,12,10,0.97);backdrop-filter:blur(16px);border-top:1px solid var(--border);justify-content:space-around;align-items:center;padding:0 0.25rem}
+.mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:100%;cursor:pointer;color:var(--muted);font-size:0.55rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;transition:color 0.2s;border:none;background:none;padding:0}
+.mob-tab.active{color:var(--accent)}
+.mob-tab-icon{font-size:1.1rem;line-height:1}
 
 /* Touch targets */
 @media(max-width:768px){
@@ -746,7 +756,69 @@ body.has-modebar .app{padding-top:94px}
 
 <!-- ── NAV ── -->
 <!-- ══ CONSENT SCREEN ══ -->
-<div id="consent-screen">
+<div id="auth-screen" style="position:fixed;inset:0;z-index:600;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto">
+  <div style="width:100%;max-width:420px">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:4px;color:var(--accent);margin-bottom:0.25rem">NutriCoach</div>
+      <div style="font-size:0.8rem;color:var(--muted)">Evidence-based coaching · Henselmans PTC</div>
+    </div>
+    <!-- Tab switcher -->
+    <div style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:3px;margin-bottom:1.5rem">
+      <button id="auth-tab-login" onclick="switchAuthTab('login')" style="flex:1;padding:0.5rem;font-size:0.78rem;font-weight:600;letter-spacing:0.05em;border:none;border-radius:7px;cursor:pointer;background:var(--accent);color:#000;transition:all 0.2s">Sign In</button>
+      <button id="auth-tab-signup" onclick="switchAuthTab('signup')" style="flex:1;padding:0.5rem;font-size:0.78rem;font-weight:600;letter-spacing:0.05em;border:none;border-radius:7px;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.2s">Create Account</button>
+    </div>
+    <!-- Login form -->
+    <div id="auth-login-form">
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Email</div>
+        <input id="auth-email" type="email" placeholder="your@email.com" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.65rem 0.85rem;color:var(--text);font-size:0.88rem;outline:none">
+      </div>
+      <div style="margin-bottom:1.25rem">
+        <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Password</div>
+        <input id="auth-password" type="password" placeholder="••••••••" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.65rem 0.85rem;color:var(--text);font-size:0.88rem;outline:none">
+      </div>
+      <div id="auth-error" style="display:none;background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);border-radius:var(--radius-sm);padding:0.6rem 0.85rem;font-size:0.8rem;color:var(--danger);margin-bottom:1rem"></div>
+      <button onclick="doLogin()" style="width:100%;background:var(--accent);color:#000;border:none;border-radius:var(--radius-sm);padding:0.75rem;font-size:0.88rem;font-weight:700;cursor:pointer;letter-spacing:0.05em">Sign In →</button>
+      <div style="text-align:center;margin-top:0.85rem">
+        <span onclick="doForgotPassword()" style="font-size:0.75rem;color:var(--muted);cursor:pointer;text-decoration:underline">Forgot password?</span>
+      </div>
+    </div>
+    <!-- Signup form -->
+    <div id="auth-signup-form" style="display:none">
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Full Name</div>
+        <input id="auth-name" type="text" placeholder="Your full name" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.65rem 0.85rem;color:var(--text);font-size:0.88rem;outline:none">
+      </div>
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Email</div>
+        <input id="auth-signup-email" type="email" placeholder="your@email.com" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.65rem 0.85rem;color:var(--text);font-size:0.88rem;outline:none">
+      </div>
+      <div style="margin-bottom:1rem">
+        <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Password</div>
+        <input id="auth-signup-password" type="password" placeholder="Min 8 characters" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.65rem 0.85rem;color:var(--text);font-size:0.88rem;outline:none">
+      </div>
+      <div style="margin-bottom:1.25rem">
+        <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Account Type</div>
+        <select id="auth-role" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.65rem 0.85rem;color:var(--text);font-size:0.88rem;outline:none">
+          <option value="client">Client — I'm here to be coached</option>
+          <option value="coach">Coach — I manage clients</option>
+        </select>
+      </div>
+      <div id="auth-signup-error" style="display:none;background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);border-radius:var(--radius-sm);padding:0.6rem 0.85rem;font-size:0.8rem;color:var(--danger);margin-bottom:1rem"></div>
+      <button onclick="doSignup()" style="width:100%;background:var(--accent);color:#000;border:none;border-radius:var(--radius-sm);padding:0.75rem;font-size:0.88rem;font-weight:700;cursor:pointer;letter-spacing:0.05em">Create Account →</button>
+    </div>
+    <!-- Divider -->
+    <div style="display:flex;align-items:center;gap:0.75rem;margin:1.25rem 0">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:0.72rem;color:var(--muted2)">or</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <button onclick="startGuestDemo()" style="width:100%;background:transparent;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.65rem;font-size:0.82rem;color:var(--muted);cursor:pointer">Try demo without account</button>
+    <div style="font-size:0.7rem;color:var(--muted2);text-align:center;margin-top:1.25rem;line-height:1.6">Australian Privacy Act 1988 compliant · Your data is encrypted and never sold</div>
+  </div>
+</div>
+
+<div id="consent-screen" class="hidden">
   <div class="consent-card">
     <div style="text-align:center;margin-bottom:1.75rem">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:4px;color:var(--accent);margin-bottom:0.35rem">NutriCoach</div>
@@ -895,6 +967,7 @@ body.has-modebar .app{padding-top:94px}
     <div class="client-badge" onclick="showModal()">
       <div class="avatar" id="navAvatar">R</div>
       <span id="navName">Robert B</span>
+      <span onclick="doSignOut()" style="font-size:0.65rem;color:var(--muted);cursor:pointer;margin-left:0.25rem" title="Sign out">⎋</span>
     </div>
   </div>
 </nav>
@@ -942,6 +1015,17 @@ body.has-modebar .app{padding-top:94px}
   <!-- Coach panel — only visible in coach mode -->
   <div id="db-coach-panel" style="display:none"></div>
 
+  <!-- Coach clients list — visible in coach mode -->
+  <div id="coach-clients-panel" style="display:none;margin-bottom:1.5rem">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div class="card-title">MY CLIENTS</div>
+        <button class="btn btn-sm btn-primary" onclick="loadCoachDashboard()">↻ Refresh</button>
+      </div>
+      <div id="coach-clients-list"><div style="color:var(--muted);font-size:0.85rem">Loading clients...</div></div>
+    </div>
+  </div>
+
   <!-- Smart alerts -->
   <div id="db-alert" style="margin-bottom:0.75rem"></div>
 
@@ -950,6 +1034,33 @@ body.has-modebar .app{padding-top:94px}
     <div class="stat orange"><div class="stat-val" id="db-bf">—<span class="unit">%</span></div><div class="stat-lbl">Body Fat</div></div>
     <div class="stat blue"><div class="stat-val" id="db-cal">—</div><div class="stat-lbl">Daily Calories</div></div>
     <div class="stat purple"><div class="stat-val" id="db-protein">—<span class="unit">g</span></div><div class="stat-lbl">Daily Protein</div></div>
+  </div>
+
+  <!-- Weight trend chart -->
+  <div class="card" style="margin-bottom:1.25rem" id="weight-chart-card">
+    <div class="flex-between mb1">
+      <div class="card-title">WEIGHT TREND</div>
+      <div style="display:flex;gap:0.5rem">
+        <span id="wc-range-4" onclick="setChartRange(4)" style="font-size:0.7rem;padding:0.2rem 0.6rem;border-radius:99px;cursor:pointer;background:var(--accent);color:#000;font-weight:700">4W</span>
+        <span id="wc-range-8" onclick="setChartRange(8)" style="font-size:0.7rem;padding:0.2rem 0.6rem;border-radius:99px;cursor:pointer;background:var(--surface2);color:var(--muted)">8W</span>
+        <span id="wc-range-12" onclick="setChartRange(12)" style="font-size:0.7rem;padding:0.2rem 0.6rem;border-radius:99px;cursor:pointer;background:var(--surface2);color:var(--muted)">12W</span>
+      </div>
+    </div>
+    <canvas id="weightTrendChart" style="width:100%;height:180px"></canvas>
+    <div id="weight-chart-empty" style="display:none;text-align:center;padding:2rem 0;color:var(--muted);font-size:0.83rem">No check-ins yet — submit your first weekly check-in to see your trend.</div>
+  </div>
+
+  <!-- AI check-in insight -->
+  <div id="ai-checkin-insight" style="display:none;margin-bottom:1.25rem">
+    <div class="card" style="border-color:rgba(125,255,107,0.2);background:rgba(125,255,107,0.03)">
+      <div style="display:flex;align-items:flex-start;gap:0.75rem">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(125,255,107,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem">🤖</div>
+        <div style="flex:1">
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem">AI Check-In Analysis</div>
+          <div id="ai-checkin-text" style="font-size:0.83rem;color:var(--text);line-height:1.65"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="g2">
@@ -2220,9 +2331,14 @@ function setMode(mode) {
     document.getElementById('journey-view').style.display = 'none';
     document.getElementById('journey-view').classList.remove('active');
     document.querySelectorAll('.nav-tab.tier-locked').forEach(t => t.style.display = 'flex');
+    const ccp = document.getElementById('coach-clients-panel');
+    if (ccp) ccp.style.display = 'block';
     showSection('dashboard');
-    setTimeout(renderCoachPanel, 80); // render after dashboard refreshes
+    setTimeout(renderCoachPanel, 80);
+    if (currentUser) loadCoachDashboard();
   } else {
+    const ccp = document.getElementById('coach-clients-panel');
+    if (ccp) ccp.style.display = 'none';
     const tier = NC.clientTier || 1;
     document.querySelectorAll('.nav-tab[data-tier]').forEach(t => {
       const tabTier = parseInt(t.getAttribute('data-tier'));
@@ -2968,6 +3084,8 @@ function saveState() {
   LS.save('phaseHistory', APP.phaseHistory);
   LS.save('progressCheckpoints', APP.progressCheckpoints);
   LS.save('cycleLogs', APP.cycleLogs);
+  // Also sync to Supabase if logged in
+  if (currentUser) saveToSupabase();
 }
 
 function loadState() {
@@ -13043,78 +13161,254 @@ document.addEventListener('DOMContentLoaded', function() {
 // CONSENT + GUEST MODE SYSTEM
 // ═══════════════════════════════════════════════════════════════
 
+// ── Supabase setup ──────────────────────────────────────────────
+const SUPA_URL = 'https://fncfgckjjborkugsjuru.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuY2ZnY2tqamJvcmt1Z3NqdXJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1MjM3NzgsImV4cCI6MjA1ODA5OTc3OH0.Qx3qFcmUzBqB8PjgWYFTaTcqEzfMGVGvzBe6b9iUzAI';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let currentUser = null;
+let currentProfile = null;
+
+// ── Auth UI helpers ─────────────────────────────────────────────
+function switchAuthTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('auth-login-form').style.display = isLogin ? '' : 'none';
+  document.getElementById('auth-signup-form').style.display = isLogin ? 'none' : '';
+  document.getElementById('auth-tab-login').style.background = isLogin ? 'var(--accent)' : 'transparent';
+  document.getElementById('auth-tab-login').style.color = isLogin ? '#000' : 'var(--muted)';
+  document.getElementById('auth-tab-signup').style.background = isLogin ? 'transparent' : 'var(--accent)';
+  document.getElementById('auth-tab-signup').style.color = isLogin ? 'var(--muted)' : '#000';
+}
+
+function showAuthError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = '';
+}
+
+async function doLogin() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-password').value;
+  document.getElementById('auth-error').style.display = 'none';
+  if (!email || !pass) { showAuthError('auth-error', 'Please enter your email and password.'); return; }
+  const { data, error } = await supa.auth.signInWithPassword({ email, password: pass });
+  if (error) { showAuthError('auth-error', error.message); return; }
+  await bootAuthedUser(data.user);
+}
+
+async function doSignup() {
+  const name = document.getElementById('auth-name').value.trim();
+  const email = document.getElementById('auth-signup-email').value.trim();
+  const pass = document.getElementById('auth-signup-password').value;
+  const role = document.getElementById('auth-role').value;
+  document.getElementById('auth-signup-error').style.display = 'none';
+  if (!name || !email || !pass) { showAuthError('auth-signup-error', 'Please fill in all fields.'); return; }
+  if (pass.length < 8) { showAuthError('auth-signup-error', 'Password must be at least 8 characters.'); return; }
+  const { data, error } = await supa.auth.signUp({ email, password: pass, options: { data: { full_name: name, role } } });
+  if (error) { showAuthError('auth-signup-error', error.message); return; }
+  if (data.user && !data.session) {
+    showAuthError('auth-signup-error', '');
+    document.getElementById('auth-signup-error').style.background = 'rgba(125,255,107,0.1)';
+    document.getElementById('auth-signup-error').style.borderColor = 'rgba(125,255,107,0.3)';
+    document.getElementById('auth-signup-error').style.color = 'var(--accent)';
+    showAuthError('auth-signup-error', '✓ Account created! Check your email to confirm, then sign in.');
+    return;
+  }
+  await bootAuthedUser(data.user);
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('auth-email').value.trim();
+  if (!email) { showAuthError('auth-error', 'Enter your email address above first.'); return; }
+  await supa.auth.resetPasswordForEmail(email);
+  showAuthError('auth-error', '✓ Password reset email sent — check your inbox.');
+}
+
+async function doSignOut() {
+  await supa.auth.signOut();
+  currentUser = null;
+  currentProfile = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('guest-banner').classList.remove('active');
+  showToast('Signed out');
+}
+
+// ── Boot after successful auth ──────────────────────────────────
+async function bootAuthedUser(user) {
+  currentUser = user;
+  document.getElementById('auth-screen').style.display = 'none';
+
+  // Fetch profile from Supabase
+  const { data: profile } = await supa.from('profiles').select('*').eq('id', user.id).single();
+  currentProfile = profile;
+
+  const isCoach = profile?.role === 'coach';
+
+  // Update nav
+  const nn = document.getElementById('navName');
+  const na = document.getElementById('navAvatar');
+  if (nn) nn.textContent = profile?.full_name?.split(' ')[0] || user.email;
+  if (na) na.textContent = (profile?.full_name || user.email)[0].toUpperCase();
+
+  if (isCoach) {
+    // Show coach dashboard
+    document.getElementById('modeBar').classList.remove('hidden');
+    document.body.classList.add('has-modebar');
+    await loadCoachDashboard();
+    setMode('coach');
+  } else {
+    // Load client data from Supabase
+    await loadClientDataFromSupabase(user.id);
+  }
+}
+
+// ── Load client data from Supabase ─────────────────────────────
+async function loadClientDataFromSupabase(clientId) {
+  const { data: cd } = await supa.from('client_data').select('*').eq('client_id', clientId).single();
+  const { data: checkins } = await supa.from('checkins').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+  const { data: meals } = await supa.from('meal_logs').select('*').eq('client_id', clientId);
+  const { data: progress } = await supa.from('progress_checkpoints').select('*').eq('client_id', clientId);
+
+  if (cd?.intake) {
+    APP.client = cd.intake;
+    APP.macros = cd.macros;
+    APP.phase = cd.phase;
+  }
+  if (checkins) APP.checkins = checkins.map(c => ({ ...c.adjustment, ...c, week: c.week_start, avg: c.avg_weight }));
+  if (meals) {
+    APP.meals = {};
+    meals.forEach(m => { APP.meals[m.logged_date] = m.foods; });
+  }
+  if (progress) APP.progressCheckpoints = progress;
+
+  const mb = document.getElementById('modeBar');
+  const io = document.getElementById('intakeOverlay');
+
+  if (APP.client) {
+    if (io) io.classList.add('hidden');
+    if (mb) mb.classList.remove('hidden');
+    document.body.classList.add('has-modebar');
+    const profile = { name: APP.client.name, tier: APP.client.tier || 1, init: (APP.client.name||'C')[0], first: APP.client.name?.split(' ')[0] };
+    buildJourneyView(profile);
+    setMode('client');
+  } else {
+    // New client — show intake
+    if (io) io.classList.remove('hidden');
+    initIntakePips();
+    document.getElementById('journey-view').style.display = 'none';
+  }
+}
+
+// ── Save to Supabase ────────────────────────────────────────────
+async function saveToSupabase() {
+  if (!currentUser) { saveState(); return; }
+  const clientId = currentUser.id;
+  await supa.from('client_data').upsert({
+    client_id: clientId,
+    intake: APP.client,
+    macros: APP.macros,
+    phase: APP.phase,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'client_id' });
+}
+
+async function saveCheckinToSupabase(checkinData) {
+  if (!currentUser) return;
+  await supa.from('checkins').insert({
+    client_id: currentUser.id,
+    week_start: checkinData.week,
+    weights: checkinData.weights,
+    avg_weight: checkinData.avg,
+    adherence: checkinData.adherence,
+    hunger: checkinData.hunger,
+    energy: checkinData.energy,
+    sleep: checkinData.sleep,
+    notes: checkinData.notes,
+    adjustment: checkinData
+  });
+}
+
+async function saveProgressToSupabase(checkpoint) {
+  if (!currentUser) return;
+  await supa.from('progress_checkpoints').insert({
+    client_id: currentUser.id,
+    checkpoint_date: checkpoint.date,
+    weight: checkpoint.weight,
+    measurements: checkpoint.measurements,
+    photos: null,
+    notes: checkpoint.notes
+  });
+}
+
+// ── Coach dashboard ─────────────────────────────────────────────
+async function loadCoachDashboard() {
+  const { data: clients } = await supa.from('profiles').select('*, client_data(macros, phase, updated_at), checkins(avg_weight, week_start, created_at)').eq('coach_id', currentUser.id).eq('role', 'client');
+
+  const container = document.getElementById('coach-clients-list');
+  if (!container) return;
+  if (!clients || clients.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;padding:1rem 0">No clients yet. Share your coach link to invite clients.</div>';
+    return;
+  }
+  container.innerHTML = clients.map(c => {
+    const lastCheckin = c.checkins?.[0];
+    const phase = c.client_data?.[0]?.phase || '—';
+    const lastDate = lastCheckin ? new Date(lastCheckin.created_at).toLocaleDateString() : 'Never';
+    const weight = lastCheckin?.avg_weight ? lastCheckin.avg_weight + 'kg' : '—';
+    return `<div class="card mb1" style="cursor:pointer" onclick="viewClientAsCoach('${c.id}')">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;flex-shrink:0">${(c.full_name||'?')[0]}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:0.88rem">${c.full_name || c.email}</div>
+          <div style="font-size:0.75rem;color:var(--muted)">Phase: ${phase} · Last check-in: ${lastDate} · Avg: ${weight}</div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--accent)">View →</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function viewClientAsCoach(clientId) {
+  await loadClientDataFromSupabase(clientId);
+  setMode('client');
+  showToast('Viewing client profile');
+}
+
+// ── Boot sequence ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async function() {
+  // Check for existing Supabase session
+  const { data: { session } } = await supa.auth.getSession();
+  if (session?.user) {
+    await bootAuthedUser(session.user);
+    return;
+  }
+  // No session — show auth screen
+  document.getElementById('auth-screen').style.display = 'flex';
+});
+
+// Listen for auth state changes
+supa.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+    await bootAuthedUser(session.user);
+  }
+});
+
+// ── Keep old functions working (guest demo) ─────────────────────
 const CONSENT_KEY = 'nc_consent_v1';
 const GUEST_KEY   = 'nc_guest_mode';
 
-// ── Boot sequence ───────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
-  const hasConsent = localStorage.getItem(CONSENT_KEY);
-  const isGuest    = localStorage.getItem(GUEST_KEY);
-
-  if (!hasConsent && !isGuest) {
-    // Fresh visitor — show consent screen
-    document.getElementById('consent-screen').classList.remove('hidden');
-    document.getElementById('guest-splash').classList.remove('active');
-    return;
-  }
-
-  if (isGuest) {
-    // Guest demo mode — show app with sample data + banner
-    document.getElementById('consent-screen').classList.add('hidden');
-    document.getElementById('guest-splash').classList.remove('active');
-    document.getElementById('guest-banner').classList.add('active');
-    loadGuestData();
-    return;
-  }
-
-  // Full user — normal boot
-  document.getElementById('consent-screen').classList.add('hidden');
-  document.getElementById('guest-splash').classList.remove('active');
-});
-
 function acceptConsent() {
-  localStorage.setItem(CONSENT_KEY, new Date().toISOString());
-  localStorage.removeItem(GUEST_KEY);
-  document.getElementById('consent-screen').classList.add('hidden');
-  document.getElementById('guest-splash').classList.remove('active');
-  document.getElementById('guest-banner').classList.remove('active');
-
-  // Boot the app: check for existing profile, otherwise show intake
+  document.getElementById('auth-screen').style.display = 'none';
   initIntakePips();
-  try {
-    const saved = localStorage.getItem('nc_profile_v14');
-    if (saved) {
-      const profile = JSON.parse(saved);
-      NC.clientTier = profile.tier || 1;
-      const nn = document.getElementById('navName'); if(nn) nn.textContent = profile.name || 'Client';
-      const na = document.getElementById('navAvatar'); if(na) na.textContent = profile.init || 'C';
-      const mn = document.getElementById('modeClientName'); if(mn) mn.textContent = profile.first || '';
-      const io = document.getElementById('intakeOverlay'); if(io) io.classList.add('hidden');
-      const mb = document.getElementById('modeBar'); if(mb) mb.classList.remove('hidden');
-      document.body.classList.add('has-modebar');
-      buildJourneyView(profile);
-      setMode('client');
-      return;
-    }
-  } catch(e) {}
-  // No profile — intake questionnaire is already visible (default state)
   document.getElementById('journey-view').style.display = 'none';
 }
 
-function showGuestSplash() {
-  document.getElementById('consent-screen').classList.add('hidden');
-  document.getElementById('guest-splash').classList.add('active');
-}
-
-function hideGuestSplash() {
-  document.getElementById('guest-splash').classList.remove('active');
-}
+function showGuestSplash() {}
+function hideGuestSplash() {}
 
 function startGuestDemo() {
   localStorage.setItem(GUEST_KEY, '1');
-  localStorage.removeItem(CONSENT_KEY);
-  document.getElementById('consent-screen').classList.add('hidden');
-  document.getElementById('guest-splash').classList.remove('active');
+  document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('guest-banner').classList.add('active');
   loadGuestData();
 }
@@ -13690,6 +13984,273 @@ if (origRenderCheckinResult) {
   };
 }
 </script>
+
+<!-- ── V16 FEATURES ── -->
+<script>
+// ── MOBILE BOTTOM NAV ───────────────────────────────────────────
+function setMobTab(el) {
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+// ── WEIGHT TREND CHART ──────────────────────────────────────────
+let weightChart = null;
+let chartWeeks = 4;
+
+function setChartRange(weeks) {
+  chartWeeks = weeks;
+  ['4','8','12'].forEach(w => {
+    const el = document.getElementById('wc-range-' + w);
+    if (!el) return;
+    el.style.background = w == weeks ? 'var(--accent)' : 'var(--surface2)';
+    el.style.color = w == weeks ? '#000' : 'var(--muted)';
+    el.style.fontWeight = w == weeks ? '700' : '400';
+  });
+  renderWeightChart();
+}
+
+function renderWeightChart() {
+  const canvas = document.getElementById('weightTrendChart');
+  const empty = document.getElementById('weight-chart-empty');
+  if (!canvas) return;
+
+  // Gather data points from checkins
+  const checkins = APP.checkins || [];
+  if (!checkins.length) {
+    canvas.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+
+  canvas.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+
+  // Get last N weeks of data
+  const sorted = [...checkins].sort((a, b) => new Date(a.date || a.week_start) - new Date(b.date || b.week_start));
+  const recent = sorted.slice(-chartWeeks);
+
+  const labels = recent.map(c => {
+    const d = new Date(c.date || c.week_start);
+    return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+  });
+  const weights = recent.map(c => c.avg || c.avg_weight);
+
+  // Destroy existing chart
+  if (weightChart) { weightChart.destroy(); weightChart = null; }
+
+  const ctx = canvas.getContext('2d');
+  weightChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: weights,
+        borderColor: '#7dff6b',
+        backgroundColor: 'rgba(125,255,107,0.08)',
+        borderWidth: 2,
+        pointBackgroundColor: '#7dff6b',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.35,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f1510',
+          borderColor: '#1e2d22',
+          borderWidth: 1,
+          titleColor: '#7dff6b',
+          bodyColor: '#e8f0ea',
+          callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + ' kg' }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#5a7060', font: { size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#5a7060',
+            font: { size: 11 },
+            callback: v => v.toFixed(1) + 'kg'
+          }
+        }
+      }
+    }
+  });
+}
+
+// Hook into refreshDashboard to always update chart
+const _origRefreshDashboard = window.refreshDashboard;
+window.refreshDashboard = function() {
+  if (_origRefreshDashboard) _origRefreshDashboard();
+  setTimeout(renderWeightChart, 100);
+};
+
+// ── AI CHECK-IN SUMMARY ─────────────────────────────────────────
+async function generateCheckinInsight(checkin, adj) {
+  const insightEl = document.getElementById('ai-checkin-insight');
+  const textEl = document.getElementById('ai-checkin-text');
+  if (!insightEl || !textEl) return;
+
+  insightEl.style.display = 'block';
+  textEl.innerHTML = '<span style="color:var(--muted);font-style:italic">Analysing your week...</span>';
+
+  const client = APP.client || {};
+  const prevCheckins = (APP.checkins || []).slice(-4);
+
+  const prompt = `You are NutriCoach, an expert nutrition coach. Analyse this client's weekly check-in and write a concise, personalised 3-4 sentence summary in a warm, direct coaching tone.
+
+Client: ${client.name || 'Client'}, ${client.sex || ''}, ${client.age_years || ''}yo, Phase: ${APP.phase?.type || 'unknown'}
+Weekly average weight: ${checkin.avg ? checkin.avg + 'kg' : 'not recorded'}
+Adherence: ${Math.round((checkin.adherence || 0) * 100)}%
+Hunger: ${checkin.hunger}/10, Energy: ${checkin.energy}/10, Sleep: ${checkin.sleep}/10
+Notes: ${checkin.notes || 'None'}
+Adjustment outcome: ${adj.adjusted ? 'Macros adjusted — ' + JSON.stringify(adj.newMacros) : (adj.noChangeReason || 'No change needed')}
+Previous weeks avg weights: ${prevCheckins.map(c => c.avg || c.avg_weight).filter(Boolean).join(', ') || 'First check-in'}
+
+Write a personalised insight — mention specific numbers, acknowledge what went well, flag anything to watch, and give one clear focus for next week. No bullet points. Plain paragraphs only.`;
+
+  try {
+    const isNetlify = window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify.com');
+    const endpoint = isNetlify ? '/.netlify/functions/chat' : 'https://api.anthropic.com/v1/messages';
+    const body = isNetlify
+      ? JSON.stringify({ messages: [{ role: 'user', content: prompt }], system: 'You are a concise, expert nutrition coach. Reply in 3-4 sentences max.' })
+      : JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 300, system: 'You are a concise, expert nutrition coach.', messages: [{ role: 'user', content: prompt }] });
+
+    const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || '';
+    if (reply) {
+      textEl.textContent = reply;
+      // Save insight to the checkin record
+      if (APP.checkins?.length) APP.checkins[APP.checkins.length - 1].aiInsight = reply;
+      saveState();
+    } else {
+      insightEl.style.display = 'none';
+    }
+  } catch(e) {
+    insightEl.style.display = 'none';
+  }
+}
+
+// Hook into submitCheckin to trigger AI insight after submission
+const _origSubmitCheckin = window.submitCheckin;
+window.submitCheckin = async function() {
+  if (_origSubmitCheckin) _origSubmitCheckin();
+  // After checkin is saved, generate AI insight
+  const lastCheckin = APP.checkins?.[APP.checkins.length - 1];
+  const lastAdj = lastCheckin?.adjustment || {};
+  if (lastCheckin) await generateCheckinInsight(lastCheckin, lastAdj);
+  // Also save to Supabase
+  if (currentUser && lastCheckin) await saveCheckinToSupabase(lastCheckin);
+};
+
+// Show saved insight on dashboard load
+function showSavedInsight() {
+  const lastCheckin = APP.checkins?.[APP.checkins.length - 1];
+  if (lastCheckin?.aiInsight) {
+    const insightEl = document.getElementById('ai-checkin-insight');
+    const textEl = document.getElementById('ai-checkin-text');
+    if (insightEl && textEl) {
+      insightEl.style.display = 'block';
+      textEl.textContent = lastCheckin.aiInsight;
+    }
+  }
+}
+
+// ── INVITE SYSTEM ───────────────────────────────────────────────
+async function generateInviteLink() {
+  if (!currentUser) { showToast('Sign in as a coach to generate invites'); return; }
+  const code = currentUser.id.slice(0, 8);
+  const link = `${window.location.origin}?coach=${code}`;
+  await navigator.clipboard.writeText(link).catch(() => {});
+  showToast('Invite link copied! Share with your client.');
+  return link;
+}
+
+// On signup, check for coach invite code in URL
+async function checkInviteCode(userId) {
+  const params = new URLSearchParams(window.location.search);
+  const coachCode = params.get('coach');
+  if (!coachCode) return;
+
+  // Find coach by ID prefix
+  const { data: coaches } = await supa.from('profiles').select('id').eq('role', 'coach');
+  const match = coaches?.find(c => c.id.startsWith(coachCode));
+  if (match) {
+    await supa.from('profiles').update({ coach_id: match.id }).eq('id', userId);
+    showToast('Linked to your coach ✓');
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+// Patch bootAuthedUser to check invite code for new clients
+const _origBootAuthedUser = window.bootAuthedUser;
+window.bootAuthedUser = async function(user) {
+  await _origBootAuthedUser(user);
+  if (currentProfile?.role === 'client' && !currentProfile?.coach_id) {
+    await checkInviteCode(user.id);
+  }
+};
+
+// Add invite button to coach dashboard
+function renderCoachInviteButton() {
+  const container = document.getElementById('coach-clients-list');
+  if (!container) return;
+  const existingBtn = document.getElementById('coach-invite-btn');
+  if (existingBtn) return;
+  const btn = document.createElement('button');
+  btn.id = 'coach-invite-btn';
+  btn.className = 'btn btn-primary btn-sm';
+  btn.style.marginTop = '1rem';
+  btn.textContent = '+ Copy Invite Link';
+  btn.onclick = generateInviteLink;
+  container.parentElement.appendChild(btn);
+}
+
+// Hook loadCoachDashboard to add invite button after loading
+const _origLoadCoachDashboard = window.loadCoachDashboard;
+window.loadCoachDashboard = async function() {
+  await _origLoadCoachDashboard();
+  renderCoachInviteButton();
+};
+
+// ── INIT HOOK ───────────────────────────────────────────────────
+// After app boots, show saved insight and render chart
+const _origRefreshAll = window.refreshAll;
+window.refreshAll = function() {
+  if (_origRefreshAll) _origRefreshAll();
+  setTimeout(() => { renderWeightChart(); showSavedInsight(); }, 200);
+};
+</script>
+
+<!-- ── MOBILE BOTTOM NAV ── -->
+<div id="mobile-nav">
+  <button class="mob-tab active" onclick="showSection('dashboard');setMobTab(this)" data-section="dashboard">
+    <div class="mob-tab-icon">⊞</div>Dashboard
+  </button>
+  <button class="mob-tab" onclick="showSection('checkin');setMobTab(this)" data-section="checkin">
+    <div class="mob-tab-icon">✓</div>Check-In
+  </button>
+  <button class="mob-tab" onclick="showSection('macros');setMobTab(this)" data-section="macros">
+    <div class="mob-tab-icon">◎</div>Macros
+  </button>
+  <button class="mob-tab" onclick="showSection('meallog');setMobTab(this)" data-section="meallog">
+    <div class="mob-tab-icon">🍽</div>Meals
+  </button>
+  <button class="mob-tab" onclick="toggleChat();setMobTab(this)" data-section="chat">
+    <div class="mob-tab-icon">💬</div>AI Coach
+  </button>
+</div>
 
 </body>
 </html>
