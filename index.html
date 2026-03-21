@@ -798,6 +798,10 @@ body.has-modebar .app{padding-top:94px}
         <input id="auth-signup-password" type="password" placeholder="Min 8 characters" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.65rem 0.85rem;color:var(--text);font-size:0.88rem;outline:none">
       </div>
       <input type="hidden" id="auth-role" value="client">
+      <div style="margin-bottom:1.25rem">
+        <div style="font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem">Coach Access Code <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+        <input id="auth-coach-code" type="password" placeholder="Leave blank if you are a client" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.65rem 0.85rem;color:var(--text);font-size:0.88rem;outline:none">
+      </div>
       <div id="auth-signup-error" style="display:none;background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);border-radius:var(--radius-sm);padding:0.6rem 0.85rem;font-size:0.8rem;color:var(--danger);margin-bottom:1rem"></div>
       <button onclick="doSignup()" style="width:100%;background:var(--accent);color:#000;border:none;border-radius:var(--radius-sm);padding:0.75rem;font-size:0.88rem;font-weight:700;cursor:pointer;letter-spacing:0.05em">Create Account →</button>
     </div>
@@ -13195,10 +13199,17 @@ async function doSignup() {
   const email = document.getElementById('auth-signup-email').value.trim();
   const pass = document.getElementById('auth-signup-password').value;
   const role = document.getElementById('auth-role').value;
+  const coachCode = document.getElementById('auth-coach-code').value.trim();
+  const COACH_SECRET = 'NUTRICOACH-PRO-2025';
+  const finalRole = coachCode === COACH_SECRET ? 'coach' : 'client';
+  if (coachCode && coachCode !== COACH_SECRET) {
+    showAuthError('auth-signup-error', 'Invalid access code. Leave it blank if you are a client.');
+    return;
+  }
   document.getElementById('auth-signup-error').style.display = 'none';
   if (!name || !email || !pass) { showAuthError('auth-signup-error', 'Please fill in all fields.'); return; }
   if (pass.length < 8) { showAuthError('auth-signup-error', 'Password must be at least 8 characters.'); return; }
-  const { data, error } = await supa.auth.signUp({ email, password: pass, options: { data: { full_name: name, role } } });
+  const { data, error } = await supa.auth.signUp({ email, password: pass, options: { data: { full_name: name, role: finalRole } } });
   if (error) { showAuthError('auth-signup-error', error.message); return; }
   if (data.user && !data.session) {
     showAuthError('auth-signup-error', '');
