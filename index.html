@@ -510,11 +510,7 @@ body.has-modebar .app{padding-top:94px}
     <!-- Step 1: Personal -->
     <div class="intake-step active" id="step-1">
       <div class="intake-step-title">Personal Details</div>
-      <div class="intake-step-sub">Basic information to set up your profile and calculate your targets.</div>
-      <div class="form-row">
-        <div class="form-group"><div class="form-label">Full Name</div><input class="form-input" id="iq-name" placeholder="e.g. Jessica Collins"></div>
-        <div class="form-group"><div class="form-label">Email</div><input class="form-input" id="iq-email" type="email" placeholder="jessica@email.com"></div>
-      </div>
+      <div class="intake-step-sub">Basic information to calculate your nutrition targets accurately.</div>
       <div class="form-row3">
         <div class="form-group"><div class="form-label">Sex</div>
           <select class="form-select" id="iq-sex"><option value="female">Female</option><option value="male">Male</option></select>
@@ -597,31 +593,37 @@ body.has-modebar .app{padding-top:94px}
       <div class="intake-step-sub">Honest answers help us identify your biggest opportunities. No judgment here.</div>
 
       <div class="form-label" style="margin-bottom:0.5rem">How would you rate your current nutrition? (1 = very poor, 10 = excellent)</div>
-      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem" id="iq-diet-rating">
-        <div onclick="intakeRating(this,1,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">1</div>
-        <div onclick="intakeRating(this,2,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">2</div>
-        <div onclick="intakeRating(this,3,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">3</div>
-        <div onclick="intakeRating(this,4,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">4</div>
-        <div onclick="intakeRating(this,5,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">5</div>
-        <div onclick="intakeRating(this,6,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">6</div>
-        <div onclick="intakeRating(this,7,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">7</div>
-        <div onclick="intakeRating(this,8,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">8</div>
-        <div onclick="intakeRating(this,9,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">9</div>
-        <div onclick="intakeRating(this,10,'iq-diet-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">10</div>
+      <div style="margin-bottom:1.25rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem">
+          <span style="font-size:0.72rem;color:var(--muted)">Very poor</span>
+          <span id="iq-diet-score-display" style="font-size:1rem;font-weight:700;color:var(--accent)">5</span>
+          <span style="font-size:0.72rem;color:var(--muted)">Excellent</span>
+        </div>
+        <input type="range" id="iq-diet-score-slider" min="1" max="10" value="5" step="1"
+          style="width:100%"
+          oninput="NC.ratings['iq-diet-score']=+this.value;document.getElementById('iq-diet-score-display').textContent=this.value">
+        <div style="display:flex;justify-content:space-between;padding:0 2px;margin-top:0.2rem">
+          <span style="font-size:0.65rem;color:var(--muted2)">1</span>
+          <span style="font-size:0.65rem;color:var(--muted2)">5</span>
+          <span style="font-size:0.65rem;color:var(--muted2)">10</span>
+        </div>
       </div>
 
       <div class="form-label" style="margin-bottom:0.5rem">How stressed do you feel about food and the scales? (1 = not at all, 10 = extremely)</div>
-      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem" id="iq-food-stress">
-        <div onclick="intakeRating(this,1,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">1</div>
-        <div onclick="intakeRating(this,2,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">2</div>
-        <div onclick="intakeRating(this,3,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">3</div>
-        <div onclick="intakeRating(this,4,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">4</div>
-        <div onclick="intakeRating(this,5,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">5</div>
-        <div onclick="intakeRating(this,6,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">6</div>
-        <div onclick="intakeRating(this,7,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">7</div>
-        <div onclick="intakeRating(this,8,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">8</div>
-        <div onclick="intakeRating(this,9,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">9</div>
-        <div onclick="intakeRating(this,10,'iq-stress-score')" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.15s;background:var(--surface2)">10</div>
+      <div style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem">
+          <span style="font-size:0.72rem;color:var(--muted)">Not at all</span>
+          <span id="iq-stress-score-display" style="font-size:1rem;font-weight:700;color:var(--accent)">3</span>
+          <span style="font-size:0.72rem;color:var(--muted)">Extremely</span>
+        </div>
+        <input type="range" id="iq-stress-score-slider" min="1" max="10" value="3" step="1"
+          style="width:100%"
+          oninput="NC.ratings['iq-stress-score']=+this.value;document.getElementById('iq-stress-score-display').textContent=this.value">
+        <div style="display:flex;justify-content:space-between;padding:0 2px;margin-top:0.2rem">
+          <span style="font-size:0.65rem;color:var(--muted2)">1</span>
+          <span style="font-size:0.65rem;color:var(--muted2)">5</span>
+          <span style="font-size:0.65rem;color:var(--muted2)">10</span>
+        </div>
       </div>
 
       <div class="form-row">
@@ -2254,14 +2256,19 @@ function buildIntakeResult() {
 }
 
 function completeIntake() {
-  // Save to profile
-  const name  = document.getElementById('iq-name')?.value || 'Client';
+  // Use name from auth session, not a form field
+  const name  = currentProfile?.full_name || currentUser?.email?.split('@')[0] || 'Client';
+  const email = currentUser?.email || '';
   const first = name.split(' ')[0];
   const init  = first[0].toUpperCase();
 
+  // Ensure slider defaults are captured if user didn't touch them
+  if (!NC.ratings['iq-diet-score']) NC.ratings['iq-diet-score'] = +(document.getElementById('iq-diet-score-slider')?.value || 5);
+  if (!NC.ratings['iq-stress-score']) NC.ratings['iq-stress-score'] = +(document.getElementById('iq-stress-score-slider')?.value || 3);
+
   // Store data
   const profileData = {
-    name, first, init,
+    name, first, init, email,
     sex: document.getElementById('iq-sex')?.value,
     age: document.getElementById('iq-age')?.value,
     height: document.getElementById('iq-height')?.value,
