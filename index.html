@@ -2284,7 +2284,7 @@ function completeIntake() {
     tier: NC.clientTier,
   };
 
-  try { localStorage.setItem('nc_profile_v14', JSON.stringify(profileData)); } catch(e) {}
+  APP.client = { name: profileData.name, first: profileData.first, init: profileData.init, email: profileData.email, sex: profileData.sex, age_years: +profileData.age||30, height_cm: +profileData.height||170, weight_kg: +profileData.weight||75, body_fat_pct: +profileData.bf||20, training_experience_years: +profileData.exp||1, average_pal: profileData.pal||'somewhat_active', goal: profileData.goal||'', diet_score: profileData.dietScore||5, stress_score: profileData.stressScore||3, health_flags: profileData.healthFlags||[], tier: profileData.tier||1 }; const _ph=(profileData.goal||'').toLowerCase().includes('fat')?'conventional_cut':(profileData.goal||'').toLowerCase().includes('muscle')?'mass_gain':'maintenance'; const _m=calcStartingMacros(APP.client,_ph); APP.macros=_m; APP.dayTypes=buildDayTypes(_m); const _d=new Date().toISOString().split('T')[0]; APP.phase={type:_ph,start_date:_d,start_weight_kg:APP.client.weight_kg,start_bf_pct:APP.client.body_fat_pct}; APP.phaseHistory=[{...APP.phase,is_active:true}]; APP.bodySnaps=[{date:_d,weight_kg:APP.client.weight_kg,body_fat_pct:APP.client.body_fat_pct}]; saveState();
 
   // Update nav name + avatar
   document.getElementById('navName').textContent = name.split(' ').map((w,i) => i < 2 ? w : '').filter(Boolean).join(' ');
@@ -2299,7 +2299,7 @@ function completeIntake() {
   document.getElementById('modeClientName').textContent = first;
 
   // Build journey and show client view
-  buildJourneyView(profileData);
+  buildJourneyView(APP.client);
   setMode('client');
 }
 
@@ -13288,7 +13288,7 @@ async function doSignOut() {
 }
 
 // ── Boot after successful auth ──────────────────────────────────
-async function bootAuthedUser(user) {
+async function bootAuthedUser(user) { if (currentUser) return; // prevent double-boot
   currentUser = user;
   document.getElementById('auth-screen').style.display = 'none';
 
