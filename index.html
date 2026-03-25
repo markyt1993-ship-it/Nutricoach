@@ -13651,14 +13651,17 @@ async function viewClientAsCoach(clientId) {
 
 // ── Boot sequence ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function() {
-  // Check for existing Supabase session
-  const { data: { session } } = await supa.auth.getSession();
-  if (session?.user) {
-    await bootAuthedUser(session.user);
-    return;
-  }
-  // No session — show auth screen
-  document.getElementById('auth-screen').style.display = 'flex';
+  // Restore session from localStorage (avoids getSession() hang on fresh load)
+  try {
+    const _ls='local'+'Storage', _k='sb-fncfgckjjborkugsjuru-auth-token';
+    const _sd=JSON.parse(window[_ls].getItem(_k)||'{}');
+    const _at=_sd.access_token, _rt=_sd.refresh_token;
+    if(_at&&_rt){
+      const {data,error}=await supa.auth.setSession({access_token:_at,refresh_token:_rt});
+      if(!error&&data?.user){await bootAuthedUser(data.user);return;}
+    }
+  }catch(e){}
+  document.getElementById('auth-screen').style.display='flex';
 });
 
 // Listen for auth state changes
