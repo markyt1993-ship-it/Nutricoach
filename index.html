@@ -13355,7 +13355,7 @@ async function loadClientDataFromSupabase(clientId) {
 
 // ── Save to Supabase ────────────────────────────────────────────
 async function saveToSupabase() {
-  if (!currentUser) { saveState(); return; }
+  if (!currentUser) { saveState(); return; } const _t=(()=>{try{return JSON.parse(localStorage.getItem('sb-fncfgckjjborkugsjuru-auth-token')||'{}').access_token||'';}catch(e){return '';}})(); if(_t){fetch('https://fncfgckjjborkugsjuru.supabase.co/rest/v1/client_data',{method:'POST',headers:{'apikey':supa.supabaseKey,'Authorization':'Bearer '+_t,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({client_id:currentUser.id,intake:APP.client,macros:APP.macros,phase:JSON.stringify(APP.phase),updated_at:new Date().toISOString()})}).catch(e=>console.warn('saveToSupabase:',e));} return;
   const clientId = currentUser.id;
   await supa.from('client_data').upsert({
     client_id: clientId,
