@@ -17,6 +17,19 @@
   --danger: #ff5252; --success: #7dff6b; --warning: #ffca28;
   --radius: 10px; --radius-sm: 6px;
 }
+html.light {
+  --bg: #f0f4f1; --surface: #ffffff; --surface2: #e8eee9;
+  --border: #c8d8ca; --border2: #b8ccba;
+  --accent: #2a7d1e; --accent-dim: #3a9e2a; --accent-glow: rgba(42,125,30,0.10);
+  --text: #1a2e1c; --muted: #4a6650; --muted2: #6a8870;
+  --danger: #c62828; --success: #2a7d1e; --warning: #e65100;
+}
+html.light body{background:var(--bg)}
+html.light nav{background:rgba(240,244,241,0.95)}
+html.light body::before{background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(42,125,30,0.06),transparent)}
+.theme-toggle{background:none;border:1px solid var(--border2);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--muted);transition:all 0.2s;display:flex;align-items:center}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
@@ -964,6 +977,7 @@ body.has-modebar .app{padding-top:94px}
     <div class="nav-tab tier-locked" onclick="showSection('supplements2')" data-tier="5">Supplements+</div>
   </div>
   <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
     <div class="client-badge" onclick="showModal()">
       <div class="avatar" id="navAvatar">R</div>
       <span id="navName">Robert B</span>
@@ -2437,9 +2451,24 @@ function promoteClientTier() {
   setTimeout(renderCoachPanel, 50);
   showToast('✓ Client promoted to Tier ' + NC.clientTier + ': ' + tierNames[NC.clientTier - 1]);
 }
+function toggleTheme() {
+  const isLight = document.documentElement.classList.toggle('light');
+  try { window['localStorage'].setItem('nc_theme', isLight ? 'light' : 'dark'); } catch(e){}
+  const b = document.getElementById('themeToggle');
+  if (b) b.textContent = isLight ? '☀️' : '🌙';
+}
+function initTheme() {
+  try { if (window['localStorage'].getItem('nc_theme') === 'light') {
+    document.documentElement.classList.add('light');
+    const b = document.getElementById('themeToggle');
+    if (b) b.textContent = '☀️';
+  }} catch(e){}
+}
+
 
 // ── INIT ──────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+  initTheme();
   // ── Consent gate — don't boot the app until consent is given ──
   const hasConsent = localStorage.getItem('nc_consent_v1');
   const isGuest    = localStorage.getItem('nc_guest_mode');
