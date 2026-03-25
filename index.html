@@ -13284,7 +13284,7 @@ async function doSignOut() {
   currentProfile = null;
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('guest-banner').classList.remove('active');
-  showToast('Signed out');
+  Object.keys(localStorage).filter(k => k.startsWith('nc_')).forEach(k => localStorage.removeItem(k)); APP.client=null; APP.macros=null; APP.phase=null; showToast('Signed out');
 }
 
 // ── Boot after successful auth ──────────────────────────────────
