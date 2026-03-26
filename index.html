@@ -45,6 +45,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
 .logo{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--accent);display:flex;align-items:center;gap:0.5rem}
 .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .nav-tabs{display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
 .nav-tabs::-webkit-scrollbar{display:none}
 .nav-tab{padding:0 0.9rem;height:58px;display:flex;align-items:center;font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;user-select:none}
@@ -790,7 +791,14 @@ body.has-modebar .app{padding-top:94px}
 <!-- ── NAV ── -->
 <!-- ══ CONSENT SCREEN ══ -->
 <div id="auth-screen" style="position:fixed;inset:0;z-index:600;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto">
-  <div style="width:100%;max-width:420px">
+  <!-- Loading spinner -->
+  <div id="auth-loading" style="text-align:center">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:4px;color:var(--accent);margin-bottom:1.5rem">NutriCoach</div>
+    <div style="width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem"></div>
+    <div style="font-size:0.78rem;color:var(--muted)">Loading your profile&#8230;</div>
+  </div>
+  <!-- Login / signup form -->
+  <div id="auth-form-wrapper" style="display:none;width:100%;max-width:420px">
     <div style="text-align:center;margin-bottom:2rem">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:4px;color:var(--accent);margin-bottom:0.25rem">NutriCoach</div>
       <div style="font-size:0.8rem;color:var(--muted)">Evidence-based coaching · Henselmans PTC</div>
@@ -999,7 +1007,7 @@ body.has-modebar .app{padding-top:94px}
     <div class="client-badge" onclick="showModal()">
       <div class="avatar" id="navAvatar">R</div>
       <span id="navName">Robert B</span>
-      <span onclick="doSignOut()" style="font-size:0.65rem;color:var(--muted);cursor:pointer;margin-left:0.25rem" title="Sign out">⎋</span>
+      <button onclick="event.stopPropagation();doSignOut()" style="background:transparent;border:1px solid var(--border2);border-radius:4px;padding:0.18rem 0.55rem;font-size:0.65rem;color:var(--muted);cursor:pointer;margin-left:0.5rem;white-space:nowrap" title="Sign out">Sign out</button>
     </div>
   </div>
 </nav>
@@ -13329,9 +13337,11 @@ async function doSignOut() {
   await supa.auth.signOut();
   currentUser = null;
   currentProfile = null;
-  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('auth-loading').style.display='none';
+  document.getElementById('auth-form-wrapper').style.display='';
+  document.getElementById('auth-screen').style.display='flex';
   document.getElementById('guest-banner').classList.remove('active');
-  Object.keys(localStorage).filter(k => k.startsWith('nc_')).forEach(k => localStorage.removeItem(k)); APP.client=null; APP.macros=null; APP.phase=null; showToast('Signed out');
+  showToast('Signed out');
 }
 
 // ── Boot after successful auth ──────────────────────────────────
@@ -13698,7 +13708,10 @@ async function viewClientAsCoach(clientId) {
 
 // ── Boot sequence ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async function() {
-  // Restore session from localStorage (avoids getSession() hang on fresh load)
+   document.getElementById('auth-loading').style.display='';
+  document.getElementById('auth-form-wrapper').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+   // Restore session from localStorage (avoids getSession() hang on fresh load)
   try {
     const _ls='local'+'Storage', _k='sb-fncfgckjjborkugsjuru-auth-token';
     const _sd=JSON.parse(window[_ls].getItem(_k)||'{}');
@@ -13708,7 +13721,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       if(!error&&data?.user){await bootAuthedUser(data.user);return;}
     }
   }catch(e){}
-  document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('auth-loading').style.display='none';
+  document.getElementById('auth-form-wrapper').style.display='';
+
 });
 
 // Listen for auth state changes
