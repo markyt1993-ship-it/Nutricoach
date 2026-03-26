@@ -1340,7 +1340,7 @@ body.has-modebar .app{padding-top:94px}
       <div class="page-sub" id="mp-sub">Generate a personalised daily meal plan based on your targets</div>
     </div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-primary btn-sm" onclick="generateMealPlan()">🔄 Generate Plan</button>
+      <button class="btn btn-primary btn-sm" id="mp-ai-btn" onclick="generateAIMealPlan()">&#10024; AI Meal Plan</button>
       <button class="btn btn-sm" onclick="exportMealPlan()">📋 Copy to Log</button>
     </div>
   </div>
@@ -1377,11 +1377,17 @@ body.has-modebar .app{padding-top:94px}
       <div class="form-row">
         <div class="form-group">
           <div class="form-label">Dietary preference</div>
-          <select class="form-select" id="mp-diet-pref" onchange="generateMealPlan()">
+          <select class="form-select" id="mp-diet-pref">
             <option value="standard">Standard (no restrictions)</option>
             <option value="high_protein">High protein focus</option>
             <option value="low_carb">Lower carb</option>
+            <option value="vegetarian">Vegetarian</option>
             <option value="vegan">Vegan / plant-based</option>
+            <option value="pescatarian">Pescatarian (fish &amp; seafood only)</option>
+            <option value="keto">Keto / very low carb</option>
+            <option value="mediterranean">Mediterranean</option>
+            <option value="paleo">Paleo</option>
+            <option value="gluten_free">Gluten-free</option>
             <option value="dairy_free">Dairy-free</option>
           </select>
         </div>
@@ -1397,16 +1403,25 @@ body.has-modebar .app{padding-top:94px}
         </div>
       </div>
 
-      <!-- Tier 2+: food dislikes -->
-      <div id="mp-avoid-group">
-        <div class="form-label">Avoid foods <span style="font-size:0.65rem;padding:0.1rem 0.35rem;border-radius:99px;background:rgba(79,195,247,0.12);color:var(--blue);border:1px solid rgba(79,195,247,0.25)">Tier 2+</span></div>
-        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.4rem" id="mp-avoid-chips">
-          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'red_meat')">Red Meat</div>
-          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'fish')">Fish</div>
-          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'eggs')">Eggs</div>
-          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'dairy')">Dairy</div>
-          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'gluten')">Gluten</div>
-          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'nuts')">Nuts</div>
+      <!-- Allergies & food aversions -->
+      <div id="mp-avoid-group" style="margin-top:0.75rem">
+        <div class="form-label" style="margin-bottom:0.4rem">Allergies &amp; food aversions <span style="font-size:0.65rem;opacity:0.7">(tap to exclude)</span></div>
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap" id="mp-avoid-chips">
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'gluten')">&#127806; Gluten</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'dairy')">&#129371; Dairy</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'eggs')">&#129368; Eggs</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'fish')">&#128031; Fish</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'shellfish')">&#129408; Shellfish</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'red_meat')">&#129385; Red Meat</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'pork')">&#128055; Pork</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'nuts')">&#127792; Tree Nuts</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'peanuts')">&#129380; Peanuts</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'soy')">&#129755; Soy</div>
+          <div class="mp-avoid-chip" onclick="toggleAvoid(this,'sesame')">&#127807; Sesame</div>
+        </div>
+        <div class="form-group" style="margin-top:0.6rem;margin-bottom:0">
+          <div class="form-label">Other dislikes or ingredients to avoid</div>
+          <input class="form-input" id="mp-custom-avoid" placeholder="e.g. mushrooms, olives, coriander, spicy food&#8230;" style="margin-top:0.25rem" />
         </div>
       </div>
     </div>
@@ -12870,7 +12885,7 @@ const MP_AVOIDED = new Set(); // foods to avoid
 function toggleAvoid(el, key) {
   if (MP_AVOIDED.has(key)) { MP_AVOIDED.delete(key); el.classList.remove('avoided'); }
   else { MP_AVOIDED.add(key); el.classList.add('avoided'); }
-  generateMealPlan();
+  // Don't auto-regenerate
 }
 
 // ── Food database with avoid tags ─────────────────────────────────
@@ -12967,7 +12982,7 @@ function initMealPlanner() {
 
   // Show targets
   renderMealPlannerTargets();
-  generateMealPlan();
+  if (APP.macros) generateAIMealPlan();
 }
 
 function renderMealPlannerTargets() {
@@ -13152,6 +13167,196 @@ function generateMealPlan() {
   // ── Tier 3+: micronutrient density panel ────────────────────────
   if (tier >= 3) renderMicroPanel(plan);
   else { const el = document.getElementById('mp-nutrient-panel'); if (el) el.style.display = 'none'; }
+}
+// ââ AI Meal Plan Generator âââââââââââââââââââââââââââââââââââââââââââââââââ
+async function generateAIMealPlan() {
+  if (!APP.macros) {
+    renderMealPlannerTargets();
+    showToast('Set up a phase first to generate a meal plan.');
+    return;
+  }
+  renderMealPlannerTargets();
+
+  const dayType     = document.getElementById('mp-day-type')?.value || 'moderate';
+  const nMeals      = parseInt(document.getElementById('mp-meals')?.value) || 4;
+  const dietPref    = document.getElementById('mp-diet-pref')?.value || 'standard';
+  const tier        = NC.clientTier || 1;
+  const trainTime   = tier >= 2 ? (document.getElementById('mp-train-time')?.value || 'afternoon') : 'afternoon';
+  const customAvoid = document.getElementById('mp-custom-avoid')?.value?.trim() || '';
+  const targets     = APP.dayTypes?.[dayType] || APP.macros;
+  const { calories, protein_g, carbs_g, fat_g, fiber_g } = targets;
+  const avoidedList = [...MP_AVOIDED].join(', ');
+  const phase       = APP.currentPhase?.type || 'maintenance';
+
+  const dietLabels = {
+    standard:'no specific dietary restrictions', high_protein:'high-protein focus (maximise protein variety)',
+    low_carb:'lower carb (reduce grains/starchy carbs)', vegetarian:'vegetarian (no meat or fish)',
+    vegan:'strictly vegan (no animal products whatsoever)', pescatarian:'pescatarian (fish and seafood OK, no other meat)',
+    keto:'ketogenic (very low carb under 30g net carbs, high fat)', mediterranean:'Mediterranean style (olive oil, fish, legumes, wholegrains, vegetables)',
+    paleo:'paleo (whole unprocessed foods, no grains, no legumes, no dairy)',
+    gluten_free:'strictly gluten-free (absolutely no wheat, barley, rye or cross-contaminated foods)',
+    dairy_free:'dairy-free (no milk, cheese, butter, yogurt or whey)'
+  };
+
+  const dayLabel = { moderate:'training day (moderate)', hard:'hard training day', rest:'rest day', light:'light activity day' };
+
+  // ââ Loading state ââââââââââââââââââââââââââââââââââââââââââââââââ
+  const btn = document.getElementById('mp-ai-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = 'â³ Generatingâ¦'; }
+  const output = document.getElementById('mp-plan-output');
+  if (output) output.innerHTML = `
+    <div style="text-align:center;padding:3.5rem 1rem;color:var(--muted2)">
+      <div style="font-size:2.2rem;margin-bottom:0.75rem">â¨</div>
+      <div style="font-size:0.92rem;font-weight:600;color:var(--muted);margin-bottom:0.3rem">Claude is crafting your personalised planâ¦</div>
+      <div style="font-size:0.78rem">Taking your targets, diet type and preferences into account</div>
+    </div>`;
+
+  // ââ Build prompt âââââââââââââââââââââââââââââââââââââââââââââââââ
+  const systemPrompt = `You are an expert sports nutritionist. Generate precise, practical meal plans that hit macro targets and respect all dietary restrictions. Return ONLY valid JSON â no markdown fences, no explanation text, just the raw JSON object.`;
+
+  const avoidSection = [
+    avoidedList ? `ALLERGENS / STRICT AVOIDANCES: ${avoidedList}` : '',
+    customAvoid  ? `OTHER DISLIKES (also exclude): ${customAvoid}` : '',
+  ].filter(Boolean).join('\n');
+
+  const userPrompt = `Generate a ${dayLabel[dayType] || 'training day'} meal plan with these exact requirements:
+
+MACRO TARGETS (hit these precisely):
+â¢ Calories: ${calories} kcal  (stay within Â±40 kcal)
+â¢ Protein: ${protein_g}g      (stay within Â±5g â most important)
+â¢ Carbs: ${carbs_g}g
+â¢ Fat: ${fat_g}g
+â¢ Fibre: ${fiber_g || 25}g minimum
+
+PLAN SETTINGS:
+â¢ Number of meals: ${nMeals}
+â¢ Diet style: ${dietLabels[dietPref] || 'standard'}
+â¢ Training time: ${trainTime}
+â¢ Goal phase: ${phase}
+${avoidSection ? avoidSection + '\n' : ''}
+Return ONLY this JSON structure with no extra text:
+{
+  "meals": [
+    {
+      "name": "Meal name",
+      "time": "7:00 AM",
+      "emoji": "ð³",
+      "timing_note": "Optional coaching note (pre/post workout timing, leucine tip, etc.) or empty string",
+      "items": [
+        { "name": "Specific food name", "amount": "150g", "cal": 180, "p": 35, "c": 0, "f": 4, "fi": 0 }
+      ],
+      "prep_note": "One-line simple prep tip (e.g. 'Cook oats with water, top with banana and honey') or empty string"
+    }
+  ],
+  "plan_note": "One personalised sentence about this plan (mention the goal phase and training schedule)."
+}
+
+Rules:
+- Use specific food names (e.g. 'Rolled oats' not just 'Oats')
+- Include at least 2 different protein sources across the day
+- All nutrition values are per serving as listed in 'amount'
+- The cal/p/c/f/fi values must be mathematically accurate for the stated amount
+- Distribute ${protein_g}g protein across all ${nMeals} meals (min 20g per meal if possible)
+- Include vegetables in at least 2 meals
+- Prefer simple, practical foods that can be prepped quickly`;
+
+  try {
+    const res = await fetch('/.netlify/functions/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ maxTokens: 4000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+    });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+    const raw = data.content?.[0]?.text || '';
+    // Strip any accidental markdown fences
+    const jsonStr = raw.replace(/^```(?:json)?\n?/,'').replace(/\n?```$/,'').trim();
+    const mealData = JSON.parse(jsonStr);
+    renderAIMealPlan(mealData, targets);
+  } catch(err) {
+    console.error('AI meal plan error:', err);
+    showToast('AI unavailable â showing algorithmically generated plan');
+    generateMealPlan();
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = 'â¨ AI Meal Plan'; }
+  }
+}
+
+function renderAIMealPlan(data, targets) {
+  const el = document.getElementById('mp-plan-output');
+  if (!el) return;
+
+  // Calculate day totals from items
+  const actual = { cal:0, p:0, c:0, f:0, fi:0 };
+  (data.meals || []).forEach(m => (m.items || []).forEach(it => {
+    actual.cal += it.cal || 0;
+    actual.p   += it.p   || 0;
+    actual.c   += it.c   || 0;
+    actual.f   += it.f   || 0;
+    actual.fi  += it.fi  || 0;
+  }));
+
+  const pct = (a, t) => Math.min(120, Math.round(a / t * 100));
+  const badge = (val, label, unit, target, col) => {
+    const p = pct(val, target);
+    const ok = p >= 90 && p <= 110;
+    const c2 = ok ? 'var(--accent)' : p < 80 ? 'var(--warning)' : 'var(--danger)';
+    return `<div class="mp-summary-item">
+      <div class="mp-summary-val" style="color:${c2}">${Math.round(val)}</div>
+      <div style="font-size:0.65rem;color:${c2};font-family:'DM Mono',monospace">${unit}</div>
+      <div class="mp-summary-lbl">${label}</div>
+      <div style="font-size:0.65rem;color:${c2}">${p}% target</div>
+    </div>`;
+  };
+
+  const summaryHTML = `<div class="mp-day-summary">
+    ${badge(actual.cal,'Calories','kcal',targets.calories)}
+    ${badge(actual.p,'Protein','g',targets.protein_g)}
+    ${badge(actual.c,'Carbs','g',targets.carbs_g)}
+    ${badge(actual.f,'Fat','g',targets.fat_g)}
+    ${badge(actual.fi,'Fibre','g',targets.fiber_g||25)}
+  </div>`;
+
+  const planNoteHTML = data.plan_note
+    ? `<div style="background:rgba(125,255,107,0.05);border:1px solid var(--border2);border-radius:8px;padding:0.65rem 0.85rem;margin-bottom:1rem;font-size:0.8rem;color:var(--muted);line-height:1.5">â¨ ${data.plan_note}</div>`
+    : '';
+
+  const mealsHTML = (data.meals || []).map(meal => {
+    const mealTotal = (meal.items || []).reduce((a,it) => ({ cal:a.cal+(it.cal||0), p:a.p+(it.p||0), c:a.c+(it.c||0), f:a.f+(it.f||0) }), {cal:0,p:0,c:0,f:0});
+    return `<div class="mp-meal-card">
+      <div class="mp-meal-head" onclick="var b=this.nextElementSibling,open=b.classList.toggle('open');this.querySelector('.mp-chevron').style.transform=open?'rotate(90deg)':''">
+        <span class="mp-meal-time">${meal.time || ''}</span>
+        <span class="mp-meal-name">${meal.emoji || 'ð½'} ${meal.name}</span>
+        <span class="mp-meal-cals">${Math.round(mealTotal.cal)} kcal</span>
+        <span class="mp-chevron" style="color:var(--muted);font-size:1.1rem;transition:transform 0.2s;flex-shrink:0;margin-left:0.5rem">âº</span>
+      </div>
+      <div class="mp-meal-body">
+        ${meal.timing_note ? `<div class="mp-timing-note">${meal.timing_note}</div>` : ''}
+        ${(meal.items || []).map(it => `<div class="mp-food-row">
+          <span class="mp-food-name">${it.name}</span>
+          <span class="mp-food-qty">${it.amount}</span>
+          <span class="mp-food-macros">${it.cal}kcal Â· P${it.p}g C${it.c}g F${it.f}g</span>
+        </div>`).join('')}
+        ${meal.prep_note ? `<div style="font-size:0.74rem;color:var(--muted2);padding:0.4rem 0 0;border-top:1px solid var(--border);margin-top:0.35rem">ð¡ ${meal.prep_note}</div>` : ''}
+        <div class="mp-total-row">
+          <div class="mp-total-item"><span style="color:var(--muted);font-size:0.72rem">Total:</span> <span class="mp-total-val" style="color:var(--accent)">${Math.round(mealTotal.cal)}</span><span style="font-size:0.68rem;color:var(--muted2)">kcal</span></div>
+          <div class="mp-total-item"><span style="color:var(--muted);font-size:0.72rem">P</span> <span class="mp-total-val" style="color:var(--blue)">${Math.round(mealTotal.p)}</span><span style="font-size:0.68rem;color:var(--muted2)">g</span></div>
+          <div class="mp-total-item"><span style="color:var(--muted);font-size:0.72rem">C</span> <span class="mp-total-val" style="color:var(--warning)">${Math.round(mealTotal.c)}</span><span style="font-size:0.68rem;color:var(--muted2)">g</span></div>
+          <div class="mp-total-item"><span style="color:var(--muted);font-size:0.72rem">F</span> <span class="mp-total-val" style="color:var(--orange)">${Math.round(mealTotal.f)}</span><span style="font-size:0.68rem;color:var(--muted2)">g</span></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = summaryHTML + planNoteHTML + mealsHTML;
+
+  // Store in format compatible with export
+  window._currentMealPlan = (data.meals || []).map(m => ({
+    name: m.name, time: m.time || '',
+    foods: (m.items || []).map(it => ({ food: { name: it.name, emoji:'ð½', cal:it.cal, p:it.p, c:it.c, f:it.f, fi:it.fi||0, qty_unit:'' }, qty: 1, display_qty: it.amount })),
+    total: (m.items||[]).reduce((a,it)=>({cal:a.cal+(it.cal||0),p:a.p+(it.p||0),c:a.c+(it.c||0),f:a.f+(it.f||0),fi:a.fi+(it.fi||0)}),{cal:0,p:0,c:0,f:0,fi:0}),
+    timingNote: m.timing_note || '', leucineNote: ''
+  }));
 }
 
 function renderMealPlan(plan, targets, actual, tier, trainTime, timingTpl) {
