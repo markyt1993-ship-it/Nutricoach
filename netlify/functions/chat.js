@@ -18,11 +18,12 @@ exports.handler = async function(event) {
   console.log('Body received:', event.body);
   console.log('Body type:', typeof event.body);
 
-  let messages, system;
+  let messages, system, maxTokens;
   try {
     const parsed = JSON.parse(event.body || '{}');
     messages = parsed.messages;
     system = parsed.system;
+    maxTokens = Math.min(parsed.maxTokens || 1000, 8000);
   } catch (e) {
     console.log('Parse error:', e.message);
     return {
@@ -55,7 +56,7 @@ exports.handler = async function(event) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: maxTokens,
         system: system || '',
         messages: messages.slice(-12),
       }),
