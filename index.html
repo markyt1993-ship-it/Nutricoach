@@ -544,31 +544,9 @@ body.has-modebar .app{padding-top:94px}
       </div>
     </div>
 
-    <!-- Step 2: Goals -->
+    <!-- Step 2: Lifestyle & Dedication -->
     <div class="intake-step" id="step-2">
-      <div class="intake-step-title">Your Goals</div>
-      <div class="intake-step-sub">What are you primarily here to achieve? Select your top priority.</div>
-      <div id="iq-goals-list">
-        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')"><div class="intake-choice-dot"></div><div><strong>Fat Loss</strong> — reduce body fat while preserving muscle</div></label>
-        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')"><div class="intake-choice-dot"></div><div><strong>Muscle Gain</strong> — build lean muscle mass</div></label>
-        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')"><div class="intake-choice-dot"></div><div><strong>Body Recomposition</strong> — lose fat and gain muscle simultaneously</div></label>
-        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')"><div class="intake-choice-dot"></div><div><strong>Performance</strong> — improve strength, power, or endurance</div></label>
-        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')"><div class="intake-choice-dot"></div><div><strong>General Health</strong> — feel better, more energy, longevity</div></label>
-        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')"><div class="intake-choice-dot"></div><div><strong>Contest / Competition Prep</strong> — physique or sport competition</div></label>
-      </div>
-      <div class="form-group" style="margin-top:0.85rem">
-        <div class="form-label">Do you have a specific goal weight or body fat target?</div>
-        <input class="form-input" id="iq-goal-weight" placeholder="Optional — e.g. 62kg or 18% body fat">
-      </div>
-      <div class="intake-nav">
-        <button class="btn" style="flex:0 0 auto" onclick="intakeBack()">← Back</button>
-        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="intakeNext()">Next →</button>
-      </div>
-    </div>
-
-    <!-- Step 3: Dedication & Activity -->
-    <div class="intake-step" id="step-3">
-      <div class="intake-step-title">Lifestyle & Dedication</div>
+      <div class="intake-step-title">Lifestyle &amp; Dedication</div>
       <div class="intake-step-sub">These answers determine your calorie calculations and which content is most relevant for you right now.</div>
 
       <div class="form-label" style="margin-bottom:0.5rem">Daily activity level (outside of training)</div>
@@ -595,13 +573,13 @@ body.has-modebar .app{padding-top:94px}
         </div>
       </div>
       <div class="intake-nav">
-        <button class="btn" style="flex:0 0 auto" onclick="intakeBack()">← Back</button>
-        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="intakeNext()">Next →</button>
+        <button class="btn" style="flex:0 0 auto" onclick="intakeBack()">&#8592; Back</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="intakeNext()">Next &#8594;</button>
       </div>
     </div>
 
-    <!-- Step 4: Nutrition baseline -->
-    <div class="intake-step" id="step-4">
+    <!-- Step 3: Current Nutrition -->
+    <div class="intake-step" id="step-3">
       <div class="intake-step-title">Current Nutrition</div>
       <div class="intake-step-sub">Honest answers help us identify your biggest opportunities. No judgment here.</div>
 
@@ -641,13 +619,13 @@ body.has-modebar .app{padding-top:94px}
 
       <div class="form-row">
         <div class="form-group"><div class="form-label">Meals per day (including snacks)</div>
-          <select class="form-select" id="iq-meals"><option>1–2</option><option selected>3</option><option>4</option><option>5+</option></select>
+          <select class="form-select" id="iq-meals"><option>1&#8211;2</option><option selected>3</option><option>4</option><option>5+</option></select>
         </div>
         <div class="form-group"><div class="form-label">Alcohol units per week (approx.)</div>
           <select class="form-select" id="iq-alcohol">
-            <option value="0">0 — I don't drink</option>
-            <option value="low" selected>1–5 units</option>
-            <option value="moderate">6–14 units</option>
+            <option value="0">0 &#8212; I don't drink</option>
+            <option value="low" selected>1&#8211;5 units</option>
+            <option value="moderate">6&#8211;14 units</option>
             <option value="high">15+ units</option>
           </select>
         </div>
@@ -655,7 +633,7 @@ body.has-modebar .app{padding-top:94px}
       <div class="form-group">
         <div class="form-label">Do you follow any specific diet?</div>
         <select class="form-select" id="iq-diet-type">
-          <option value="none">No — I eat everything</option>
+          <option value="none">No &#8212; I eat everything</option>
           <option value="vegan">Vegan</option>
           <option value="vegetarian">Vegetarian</option>
           <option value="keto">Ketogenic</option>
@@ -664,13 +642,13 @@ body.has-modebar .app{padding-top:94px}
         </select>
       </div>
       <div class="intake-nav">
-        <button class="btn" style="flex:0 0 auto" onclick="intakeBack()">← Back</button>
-        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="intakeNext()">Next →</button>
+        <button class="btn" style="flex:0 0 auto" onclick="intakeBack()">&#8592; Back</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="intakeNext()">Next &#8594;</button>
       </div>
     </div>
 
-    <!-- Step 5: Health screening -->
-    <div class="intake-step" id="step-5">
+    <!-- Step 4: Health Screening -->
+    <div class="intake-step" id="step-4">
       <div class="intake-step-title">Health Screening</div>
       <div class="intake-step-sub">Select any conditions that apply. This helps your coach prioritise relevant modules and flag important considerations.</div>
       <div class="intake-health-grid" id="iq-health-grid">
@@ -700,12 +678,52 @@ body.has-modebar .app{padding-top:94px}
         <input class="form-input" id="iq-supps" placeholder="e.g. creatine, vitamin D, protein powder">
       </div>
       <div class="intake-nav">
-        <button class="btn" style="flex:0 0 auto" onclick="intakeBack()">← Back</button>
-        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="intakeNext()">Next →</button>
+        <button class="btn" style="flex:0 0 auto" onclick="intakeBack()">&#8592; Back</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="intakeNext()">Next &#8594;</button>
       </div>
     </div>
 
-    <!-- Step 6: Result -->
+    <!-- Step 5: Choose Your Starting Phase -->
+    <div class="intake-step" id="step-5">
+      <div class="intake-step-title">Choose Your Starting Phase</div>
+      <div class="intake-step-sub">Based on everything you've shared, here's your guided starting point. Each phase has a different nutrition strategy — choose the one that fits where you are right now. You can always change phases later.</div>
+      <div id="iq-goals-list">
+        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')">
+          <div class="intake-choice-dot"></div>
+          <div><strong>Fat Loss</strong> &#8212; A moderate calorie deficit with high protein to reduce body fat while preserving muscle. Best if you're carrying extra weight and want to lean down.</div>
+        </label>
+        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')">
+          <div class="intake-choice-dot"></div>
+          <div><strong>Muscle Gain</strong> &#8212; A moderate calorie surplus to support muscle growth and strength. Best if you're already fairly lean and want to build size and power.</div>
+        </label>
+        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')">
+          <div class="intake-choice-dot"></div>
+          <div><strong>Body Recomposition</strong> &#8212; Calories set at maintenance to gradually lose fat and gain muscle simultaneously. Best for beginners or anyone returning after a break.</div>
+        </label>
+        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')">
+          <div class="intake-choice-dot"></div>
+          <div><strong>Performance</strong> &#8212; Nutrition optimised around training output and recovery. Best if your main goal is improving strength, endurance, or sport performance.</div>
+        </label>
+        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')">
+          <div class="intake-choice-dot"></div>
+          <div><strong>General Health</strong> &#8212; A balanced, sustainable approach focused on energy, wellbeing, and longevity rather than aesthetics or performance.</div>
+        </label>
+        <label class="intake-choice" onclick="intakeSelect(this,'iq-goal')">
+          <div class="intake-choice-dot"></div>
+          <div><strong>Contest / Competition Prep</strong> &#8212; An aggressive cut phase designed to peak condition for a physique or sport competition. High commitment required.</div>
+        </label>
+      </div>
+      <div class="form-group" style="margin-top:0.85rem">
+        <div class="form-label">Do you have a specific goal weight or body fat target? (optional)</div>
+        <input class="form-input" id="iq-goal-weight" placeholder="e.g. 75kg or 15% body fat">
+      </div>
+      <div class="intake-nav">
+        <button class="btn" style="flex:0 0 auto" onclick="intakeBack()">&#8592; Back</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="intakeNext()">Next &#8594;</button>
+      </div>
+    </div>
+
+     Result -->
     <div class="intake-step" id="step-6">
       <div class="intake-step-title">You're all set! 🎉</div>
       <div class="intake-step-sub">Based on your answers, here's your personalised starting point.</div>
