@@ -51,6 +51,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
 .nav-tab{padding:0 0.9rem;height:58px;display:flex;align-items:center;font-size:0.72rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;user-select:none}
 .nav-tab:hover{color:var(--text)}
 .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* ── MORE DROPDOWN ── */
+.nav-more-wrapper{position:relative;display:flex;align-items:stretch}
+.nav-more-btn{user-select:none}
+.more-dropdown{display:none;position:absolute;top:100%;left:0;min-width:200px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:200;padding:0.5rem 0;margin-top:2px;max-height:70vh;overflow-y:auto}
+.more-dropdown.open{display:block}
+.more-section-label{padding:0.55rem 1rem 0.25rem;font-size:0.6rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);opacity:0.6}
+.more-item{padding:0.55rem 1rem;font-size:0.78rem;cursor:pointer;color:var(--text);transition:background 0.15s;display:flex;align-items:center;gap:0.35rem;white-space:nowrap}
+.more-item:hover{background:var(--surface2);color:var(--accent)}
+.more-item.active{color:var(--accent);font-weight:600}
+.more-locked{opacity:0.55}
+.more-locked:hover{opacity:1}
+.coach-mode .more-locked{opacity:1}
+.coach-mode .lock-icon{display:none}
 .nav-right{display:flex;align-items:center;gap:0.75rem;flex-shrink:0}
 .client-badge{display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.75rem;background:var(--surface2);border:1px solid var(--border2);border-radius:99px;font-size:0.75rem;cursor:pointer;transition:border-color 0.2s}
 .client-badge:hover{border-color:var(--accent)}
@@ -969,38 +982,43 @@ body.has-modebar .app{padding-top:94px}
 <nav>
   <div class="logo"><div class="logo-dot"></div>NUTRICOACH</div>
   <div class="nav-tabs" id="mainNavTabs">
-    <!-- TIER 1: Foundation — always visible to clients -->
-    <div class="nav-tab active" onclick="showSection('dashboard')" data-tier="1">Dashboard</div>
-    <div class="nav-tab" onclick="showSection('checkin')" data-tier="1">Weekly Check-In</div>
-    <div class="nav-tab" onclick="showSection('macros')" data-tier="1">Macros</div>
-    <div class="nav-tab" onclick="showSection('meallog')" data-tier="1">Meal Log</div>
-    <div class="nav-tab" onclick="showSection('mealplanner')" data-tier="1">🍽 Meal Planner</div>
-    <div class="nav-tab" onclick="showSection('phases')" data-tier="1">Phases</div>
-    <div class="nav-tab" onclick="showSection('progress')" data-tier="1">📸 Progress</div>
-    <!-- TIER 2: Structure -->
-    <div class="nav-tab tier-locked" onclick="showSection('bodycomp')" data-tier="2">Body Comp</div>
-    <div class="nav-tab tier-locked" onclick="showSection('shopping')" data-tier="2">Shopping</div>
-    <div class="nav-tab tier-locked" onclick="showSection('supplements')" data-tier="2">Supplements</div>
-    <div class="nav-tab tier-locked" onclick="showSection('adlib')" data-tier="2">Ad Libitum</div>
-    <div class="nav-tab tier-locked" onclick="showSection('cycle')" data-tier="2">🌙 Cycle</div>
-    <!-- TIER 3: Optimisation -->
-    <div class="nav-tab tier-locked" onclick="showSection('calculator')" data-tier="3">Calculator</div>
-    <div class="nav-tab tier-locked" onclick="showSection('health')" data-tier="3">Health</div>
-    <div class="nav-tab tier-locked" onclick="showSection('micros')" data-tier="3">Micros</div>
-    <div class="nav-tab tier-locked" onclick="showSection('lifestyle')" data-tier="3">Lifestyle</div>
-    <div class="nav-tab tier-locked" onclick="showSection('dietplanner')" data-tier="3">📅 Diet Planner</div>
-    <!-- TIER 4: Advanced -->
-    <div class="nav-tab tier-locked" onclick="showSection('keto')" data-tier="4">Keto</div>
-    <div class="nav-tab tier-locked" onclick="showSection('periodization')" data-tier="4">Periodization</div>
-    <div class="nav-tab tier-locked" onclick="showSection('acne')" data-tier="4">Acne & Skin</div>
-    <div class="nav-tab tier-locked" onclick="showSection('cellulite')" data-tier="4">Cellulite</div>
-    <!-- TIER 5: Specialist -->
-    <div class="nav-tab tier-locked" onclick="showSection('contestprep')" data-tier="5">Contest Prep</div>
-    <div class="nav-tab tier-locked" onclick="showSection('dandruff')" data-tier="5">Dandruff</div>
-    <div class="nav-tab tier-locked" onclick="showSection('hairloss')" data-tier="5">Hair Loss</div>
-    <div class="nav-tab tier-locked" onclick="showSection('tanning')" data-tier="5">Tanning & UV</div>
-    <div class="nav-tab tier-locked" onclick="showSection('aas')" data-tier="5">AAS & Hormones</div>
-    <div class="nav-tab tier-locked" onclick="showSection('supplements2')" data-tier="5">Supplements+</div>
+    <div class="nav-tab active" onclick="showSection('dashboard')" data-section="dashboard">Dashboard</div>
+    <div class="nav-tab" onclick="showSection('checkin')" data-section="checkin">Weekly Check-In</div>
+    <div class="nav-tab" onclick="showSection('macros')" data-section="macros">Macros</div>
+    <div class="nav-tab" onclick="showSection('meallog')" data-section="meallog">Meal Log</div>
+    <div class="nav-tab" onclick="showSection('progress')" data-section="progress">Progress</div>
+    <div class="nav-more-wrapper" id="moreDropdownWrapper">
+      <div class="nav-tab nav-more-btn" id="moreBtn" onclick="toggleMoreDropdown(event)">More &#9662;</div>
+      <div class="more-dropdown" id="moreDropdown">
+        <div class="more-section-label">Journey</div>
+        <div class="more-item" onclick="showSection('phases');closeMoreDropdown()" data-section="phases">Phases</div>
+        <div class="more-item" onclick="showSection('mealplanner');closeMoreDropdown()" data-section="mealplanner">&#127374; Meal Planner</div>
+        <div class="more-section-label">Body &amp; Nutrition</div>
+        <div class="more-item more-locked" onclick="showSection('bodycomp');closeMoreDropdown()" data-section="bodycomp" data-tier="2"><span class="lock-icon">&#128274; </span>Body Comp</div>
+        <div class="more-item more-locked" onclick="showSection('shopping');closeMoreDropdown()" data-section="shopping" data-tier="2"><span class="lock-icon">&#128274; </span>Shopping</div>
+        <div class="more-item more-locked" onclick="showSection('supplements');closeMoreDropdown()" data-section="supplements" data-tier="2"><span class="lock-icon">&#128274; </span>Supplements</div>
+        <div class="more-item more-locked" onclick="showSection('adlib');closeMoreDropdown()" data-section="adlib" data-tier="2"><span class="lock-icon">&#128274; </span>Ad Libitum</div>
+        <div class="more-item more-locked" onclick="showSection('cycle');closeMoreDropdown()" data-section="cycle" data-tier="2"><span class="lock-icon">&#128274; </span>&#127769; Cycle</div>
+        <div class="more-section-label">Tools</div>
+        <div class="more-item more-locked" onclick="showSection('calculator');closeMoreDropdown()" data-section="calculator" data-tier="3"><span class="lock-icon">&#128274; </span>Calculator</div>
+        <div class="more-item more-locked" onclick="showSection('health');closeMoreDropdown()" data-section="health" data-tier="3"><span class="lock-icon">&#128274; </span>Health</div>
+        <div class="more-item more-locked" onclick="showSection('micros');closeMoreDropdown()" data-section="micros" data-tier="3"><span class="lock-icon">&#128274; </span>Micros</div>
+        <div class="more-item more-locked" onclick="showSection('lifestyle');closeMoreDropdown()" data-section="lifestyle" data-tier="3"><span class="lock-icon">&#128274; </span>Lifestyle</div>
+        <div class="more-item more-locked" onclick="showSection('dietplanner');closeMoreDropdown()" data-section="dietplanner" data-tier="3"><span class="lock-icon">&#128274; </span>&#128197; Diet Planner</div>
+        <div class="more-section-label">Advanced</div>
+        <div class="more-item more-locked" onclick="showSection('keto');closeMoreDropdown()" data-section="keto" data-tier="4"><span class="lock-icon">&#128274; </span>Keto</div>
+        <div class="more-item more-locked" onclick="showSection('periodization');closeMoreDropdown()" data-section="periodization" data-tier="4"><span class="lock-icon">&#128274; </span>Periodization</div>
+        <div class="more-item more-locked" onclick="showSection('acne');closeMoreDropdown()" data-section="acne" data-tier="4"><span class="lock-icon">&#128274; </span>Acne &amp; Skin</div>
+        <div class="more-item more-locked" onclick="showSection('cellulite');closeMoreDropdown()" data-section="cellulite" data-tier="4"><span class="lock-icon">&#128274; </span>Cellulite</div>
+        <div class="more-section-label">Specialist</div>
+        <div class="more-item more-locked" onclick="showSection('contestprep');closeMoreDropdown()" data-section="contestprep" data-tier="5"><span class="lock-icon">&#128274; </span>Contest Prep</div>
+        <div class="more-item more-locked" onclick="showSection('dandruff');closeMoreDropdown()" data-section="dandruff" data-tier="5"><span class="lock-icon">&#128274; </span>Dandruff</div>
+        <div class="more-item more-locked" onclick="showSection('hairloss');closeMoreDropdown()" data-section="hairloss" data-tier="5"><span class="lock-icon">&#128274; </span>Hair Loss</div>
+        <div class="more-item more-locked" onclick="showSection('tanning');closeMoreDropdown()" data-section="tanning" data-tier="5"><span class="lock-icon">&#128274; </span>Tanning &amp; UV</div>
+        <div class="more-item more-locked" onclick="showSection('aas');closeMoreDropdown()" data-section="aas" data-tier="5"><span class="lock-icon">&#128274; </span>AAS &amp; Hormones</div>
+        <div class="more-item more-locked" onclick="showSection('supplements2');closeMoreDropdown()" data-section="supplements2" data-tier="5"><span class="lock-icon">&#128274; </span>Supplements+</div>
+      </div>
+    </div>
   </div>
   <div class="nav-right">
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
@@ -3265,13 +3283,18 @@ function showModal() { document.getElementById('onboardModal').style.display='fl
 function showSection(id) {
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.more-item').forEach(t=>t.classList.remove('active'));
   const sec = document.getElementById(id);
   if (sec) sec.classList.add('active');
-  // Highlight matching nav tab by data target
-  document.querySelectorAll('.nav-tab').forEach(t => {
-    const m = t.getAttribute('onclick')?.match(/showSection\('([^']+)'\)/);
-    if (m && m[1] === id) t.classList.add('active');
-  });
+  const matchTab = document.querySelector('.nav-tab[data-section="'+id+'"]');
+  if (matchTab) {
+    matchTab.classList.add('active');
+  } else {
+    const moreBtn = document.getElementById('moreBtn');
+    if (moreBtn) moreBtn.classList.add('active');
+    const matchItem = document.querySelector('.more-item[data-section="'+id+'"]');
+    if (matchItem) matchItem.classList.add('active');
+  }
   if (id === 'dashboard') refreshDashboard();
   if (id === 'macros') refreshMacros();
   if (id === 'checkin') refreshCheckinHistory();
@@ -3286,6 +3309,21 @@ function showSection(id) {
   if (id === 'cycle') { setTimeout(() => { loadCycleSettings(); updateCycleDisplay(); renderCycleLog(); }, 50); }
   if (id === 'dietplanner') { const dpDate = document.getElementById('dp-start-date'); if (dpDate && !dpDate.value) dpDate.value = new Date().toISOString().split('T')[0]; }
 }
+
+// ─── MORE DROPDOWN ───────────────────────────────────────────────────────────────────
+function toggleMoreDropdown(e) {
+  e && e.stopPropagation();
+  const dd = document.getElementById('moreDropdown');
+  if (dd) dd.classList.toggle('open');
+}
+function closeMoreDropdown() {
+  const dd = document.getElementById('moreDropdown');
+  if (dd) dd.classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  const wrapper = document.getElementById('moreDropdownWrapper');
+  if (wrapper && !wrapper.contains(e.target)) closeMoreDropdown();
+});
 
 // ─── REFRESH ALL ─────────────────────────────────────────────────────────────
 function refreshAll() {
