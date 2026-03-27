@@ -27,6 +27,10 @@ html.light {
 html.light body{background:var(--bg)}
 html.light nav{background:rgba(240,244,241,0.95)}
 html.light body::before{background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(42,125,30,0.06),transparent)}
+html.light .card-glass{background:rgba(255,255,255,0.85)}
+html.light .mode-bar{background:rgba(240,244,241,0.97)}
+html.light #mobile-nav{background:rgba(240,244,241,0.97)}
+html.light #guest-banner{background:rgba(240,244,241,0.97)}
 .theme-toggle{background:none;border:1px solid var(--border2);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--muted);transition:all 0.2s;display:flex;align-items:center}
 .theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
 
@@ -127,7 +131,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
 .form-label{display:block;font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem}
 .form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:0.6rem 0.8rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s}
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
-.form-select option{background:#162019}
+.form-select option{background:var(--surface2);color:var(--text)}
 .form-textarea{resize:vertical;min-height:80px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 .form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
