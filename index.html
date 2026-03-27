@@ -13577,8 +13577,8 @@ async function doForgotPassword() {
   showAuthError('auth-error', '✓ Password reset email sent — check your inbox.');
 }
 
-async function doSignOut() {
-  try { await supa.auth.signOut(); } catch(e) {}
+function doSignOut() {
+  // Update UI immediately â don't await Supabase (it can hang due to lock conflicts)
   currentUser = null;
   currentProfile = null;
   APP.client = null; APP.macros = null; APP.phase = null;
@@ -13589,6 +13589,8 @@ async function doSignOut() {
   document.getElementById('auth-screen').style.display = 'flex';
   const gb = document.getElementById('guest-banner');
   if (gb) gb.classList.remove('active');
+  // Fire-and-forget: sign out from Supabase in the background
+  try { supa.auth.signOut(); } catch(e) {}
 }
 
 // ── Boot after successful auth ──────────────────────────────────
