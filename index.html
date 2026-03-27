@@ -13624,9 +13624,24 @@ async function loadClientDataFromSupabase(clientId) {
   const { data: progress } = await supa.from('progress_checkpoints').select('*').eq('client_id', clientId);
 
   if (cd?.intake) {
-    APP.client = cd.intake;
-    APP.macros = cd.macros;
-    APP.phase = cd.phase;
+    // ââ Primary path: data exists in Supabase ââââââââââââââââââââ
+    APP.client   = cd.intake;
+    APP.macros   = cd.macros;
+    APP.phase    = cd.phase;
+    APP.dayTypes = cd.intake?.dayTypes || APP.dayTypes;
+  } else {
+    // ââ Fallback: check localStorage if Supabase has no intake âââ
+    // Covers: first login on new device, previous sync failure,
+    // or intake completed before Supabase save was wired up.
+    const lsClient = LS.load('client');
+    if (lsClient) {
+      APP.client   = lsClient;
+      APP.macros   = APP.macros   || LS.load('macros');
+      APP.phase    = APP.phase    || LS.load('phase');
+      APP.dayTypes = APP.dayTypes || LS.load('dayTypes');
+      // Sync to Supabase so future loads use the primary path
+      try { await saveToSupabase(); } catch(e) {}
+    }
   }
   if (checkins) APP.checkins = checkins.map(c => ({ ...c.adjustment, ...c, week: c.week_start, avg: c.avg_weight }));
   if (meals) {
@@ -13639,19 +13654,23 @@ async function loadClientDataFromSupabase(clientId) {
   const io = document.getElementById('intakeOverlay');
 
   if (APP.client) {
+    // ââ Returning client: go straight to dashboard ââââââââââââââââ
     if (io) io.classList.add('hidden');
     if (mb) mb.classList.remove('hidden');
     document.body.classList.add('has-modebar');
     const profile = { name: APP.client.name, tier: APP.client.tier || 1, init: (APP.client.name||'C')[0], first: APP.client.name?.split(' ')[0] };
     buildJourneyView(profile);
     setMode('client');
+    refreshAll();
   } else {
-    // New client — show intake
+    // ââ Genuinely new client: show intake questionnaire âââââââââââ
     if (io) io.classList.remove('hidden');
     initIntakePips();
-    document.getElementById('journey-view').style.display = 'none';
+    const jv = document.getElementById('journey-view');
+    if (jv) jv.style.display = 'none';
   }
 }
+
 
 // ── Save to Supabase ────────────────────────────────────────────
 async function saveToSupabase() {
