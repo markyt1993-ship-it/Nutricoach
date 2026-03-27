@@ -269,7 +269,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
 
 /* ── ONBOARDING MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:560px;padding:2rem;animation:fadeIn 0.3s ease}
+.modal{position:relative;background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:560px;padding:2rem;animation:fadeIn 0.3s ease}
 .modal-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;margin-bottom:0.25rem}
 .modal-sub{color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem}
 .hidden{display:none}
@@ -761,6 +761,7 @@ body.has-modebar .app{padding-top:94px}
  ──────────────────────────────────────────────── -->
 <div class="modal-overlay" id="onboardModal" style="display:none">
   <div class="modal">
+    <button onclick="document.getElementById('onboardModal').style.display='none'" style="position:absolute;top:0.75rem;right:0.75rem;background:transparent;border:none;font-size:1.25rem;color:var(--muted);cursor:pointer;line-height:1" title="Close">×</button>
     <div class="modal-title">Welcome to <span style="color:var(--accent)">NutriCoach</span></div>
     <div class="modal-sub">Set up your first client profile to get started</div>
     <div class="form-row">
@@ -1022,7 +1023,7 @@ body.has-modebar .app{padding-top:94px}
   </div>
   <div class="nav-right">
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
-    <div class="client-badge" onclick="showModal()">
+    <div class="client-badge">
       <div class="avatar" id="navAvatar">R</div>
       <span id="navName">Robert B</span>
       <button onclick="event.stopPropagation();doSignOut()" style="background:transparent;border:1px solid var(--border2);border-radius:4px;padding:0.18rem 0.55rem;font-size:0.65rem;color:var(--muted);cursor:pointer;margin-left:0.5rem;white-space:nowrap" title="Sign out">Sign out</button>
@@ -13577,14 +13578,17 @@ async function doForgotPassword() {
 }
 
 async function doSignOut() {
-  await supa.auth.signOut();
+  try { await supa.auth.signOut(); } catch(e) {}
   currentUser = null;
   currentProfile = null;
-  document.getElementById('auth-loading').style.display='none';
-  document.getElementById('auth-form-wrapper').style.display='';
-  document.getElementById('auth-screen').style.display='flex';
-  document.getElementById('guest-banner').classList.remove('active');
-  showToast('Signed out');
+  APP.client = null; APP.macros = null; APP.phase = null;
+  const mb = document.getElementById('modeBar');
+  if (mb) { mb.classList.add('hidden'); document.body.classList.remove('has-modebar'); }
+  document.getElementById('auth-loading').style.display = 'none';
+  document.getElementById('auth-form-wrapper').style.display = '';
+  document.getElementById('auth-screen').style.display = 'flex';
+  const gb = document.getElementById('guest-banner');
+  if (gb) gb.classList.remove('active');
 }
 
 // ── Boot after successful auth ──────────────────────────────────
@@ -13988,10 +13992,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 });
 
-// Listen for auth state changes
+// Listen for auth state changes (handles login, token refresh, sign-out)
 supa.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session?.user && !currentUser) {
     await bootAuthedUser(session.user);
+  } else if (event === 'SIGNED_OUT') {
+    currentUser = null; currentProfile = null;
+    const mb = document.getElementById('modeBar');
+    if (mb) { mb.classList.add('hidden'); document.body.classList.remove('has-modebar'); }
+    document.getElementById('auth-loading').style.display = 'none';
+    document.getElementById('auth-form-wrapper').style.display = '';
+    document.getElementById('auth-screen').style.display = 'flex';
   }
 });
 
