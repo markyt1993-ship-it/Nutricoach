@@ -4959,10 +4959,11 @@ function calcActivityLevel() {
 }
 
 // ─── TOAST ───────────────────────────────────────────────────────────────────
-function showToast(msg) {
+function showToast(msg, duration=2800) {
   const t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg;
-  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800);
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), duration);
 }
+
 
 // Close food dropdown on outside click
 document.addEventListener('click', e => { if (!e.target.closest('.food-search-wrap')) document.getElementById('ml-results').style.display='none'; });
@@ -13597,9 +13598,11 @@ function doSignOut() {
 async function bootAuthedUser(user) {
   if (currentUser) return; // prevent double-boot (race between DOMContentLoaded + onAuthStateChange)
   currentUser = user;
-  document.getElementById('auth-screen').style.display = 'none';
+  // Keep loading spinner visible while we fetch data — hides blank flash on slow connections
+  document.getElementById('auth-loading').style.display = '';
+  document.getElementById('auth-form-wrapper').style.display = 'none';
 
-  // Fetch profile â upsert if missing (no DB trigger, so we create it from auth metadata)
+  // Fetch profile — upsert if missing (no DB trigger, so we create it from auth metadata)
   let { data: profile } = await supa.from('profiles').select('*').eq('id', user.id).single();
   if (!profile) {
     const meta = user.user_metadata || {};
@@ -13621,17 +13624,20 @@ async function bootAuthedUser(user) {
   const na = document.getElementById('navAvatar');
   if (nn) nn.textContent = profile?.full_name?.split(' ')[0] || user.email;
   if (na) na.textContent = (profile?.full_name || user.email || 'U')[0].toUpperCase();
+
   if (isCoach) {
-    // Show coach dashboard
+    // Load all coach data, THEN reveal dashboard
     document.getElementById('modeBar').classList.remove('hidden');
     document.body.classList.add('has-modebar');
     await loadCoachDashboard();
+    document.getElementById('auth-screen').style.display = 'none';
     setMode('coach');
   } else {
-    // Load client data from Supabase
+    // loadClientDataFromSupabase will hide auth-screen once data is ready
     await loadClientDataFromSupabase(user.id);
   }
 }
+
 
 // ── Load client data from Supabase ─────────────────────────────
 async function loadClientDataFromSupabase(clientId) {
@@ -13667,11 +13673,12 @@ async function loadClientDataFromSupabase(clientId) {
   }
   if (progress) APP.progressCheckpoints = progress;
 
-  const mb = document.getElementById('modeBar');
+    const mb = document.getElementById('modeBar');
   const io = document.getElementById('intakeOverlay');
+  const authScreen = document.getElementById('auth-screen');
 
   if (APP.client) {
-    // ââ Returning client: go straight to dashboard ââââââââââââââââ
+    // ── Returning client: build dashboard then reveal — re blank flash ──
     if (io) io.classList.add('hidden');
     if (mb) mb.classList.remove('hidden');
     document.body.classList.add('has-modebar');
@@ -13679,8 +13686,10 @@ async function loadClientDataFromSupabase(clientId) {
     buildJourneyView(profile);
     setMode('client');
     refreshAll();
+    if (authScreen) authScreen.style.display = 'none'; // reveal only when ready
   } else {
-    // ââ Genuinely new client: show intake questionnaire âââââââââââ
+    // ── Genuinely new client: show intake questionnaire ───────────
+    if (authScreen) authScreen.style.display = 'none';
     if (io) io.classList.remove('hidden');
     initIntakePips();
     const jv = document.getElementById('journey-view');
@@ -13689,22 +13698,27 @@ async function loadClientDataFromSupabase(clientId) {
 }
 
 
+
 // ── Save to Supabase ────────────────────────────────────────────
 async function saveToSupabase() {
-  if (!currentUser) { saveState(); return; } const _t=(()=>{try{return JSON.parse(localStorage.getItem('sb-fncfgckjjborkugsjuru-auth-token')||'{}').access_token||'';}catch(e){return '';}})(); if(_t){fetch('https://fncfgckjjborkugsjuru.supabase.co/rest/v1/client_data',{method:'POST',headers:{'apikey':supa.supabaseKey,'Authorization':'Bearer '+_t,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({client_id:currentUser.id,intake:APP.client,macros:APP.macros,phase:JSON.stringify(APP.phase),updated_at:new Date().toISOString()})}).catch(e=>console.warn('saveToSupabase:',e));} return;
+  if (!currentUser) { saveState(); return; }
   const clientId = currentUser.id;
-  await supa.from('client_data').upsert({
+  const { error } = await supa.from('client_data').upsert({
     client_id: clientId,
     intake: APP.client,
     macros: APP.macros,
     phase: APP.phase,
     updated_at: new Date().toISOString()
   }, { onConflict: 'client_id' });
+  if (error) {
+    console.error('Save failed:', error);
+    showToast('⚠️ Save failed — your data is stored locally and will sync when connection is restored', 4000);
+  }
 }
 
 async function saveCheckinToSupabase(checkinData) {
   if (!currentUser) return;
-  await supa.from('checkins').insert({
+  const { error } = await supa.from('checkins').insert({
     client_id: currentUser.id,
     week_start: checkinData.week,
     weights: checkinData.weights,
@@ -13716,11 +13730,15 @@ async function saveCheckinToSupabase(checkinData) {
     notes: checkinData.notes,
     adjustment: checkinData
   });
+  if (error) {
+    console.error('Check-in save failed:', error);
+    showToast('⚠️ Check-in save failed — please try again', 4000);
+  }
 }
 
 async function saveProgressToSupabase(checkpoint) {
   if (!currentUser) return;
-  await supa.from('progress_checkpoints').insert({
+  const { error } = await supa.from('progress_checkpoints').insert({
     client_id: currentUser.id,
     checkpoint_date: checkpoint.date,
     weight: checkpoint.weight,
@@ -13728,7 +13746,12 @@ async function saveProgressToSupabase(checkpoint) {
     photos: null,
     notes: checkpoint.notes
   });
+  if (error) {
+    console.error('Progress save failed:', error);
+    showToast('⚠️ Progress save failed — please try again', 4000);
+  }
 }
+
 
 // ── Coach dashboard ─────────────────────────────────────────────
 let allCoachClients = [];
