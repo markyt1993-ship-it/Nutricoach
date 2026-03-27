@@ -13594,12 +13594,24 @@ function doSignOut() {
 }
 
 // ── Boot after successful auth ──────────────────────────────────
-async function bootAuthedUser(user) { if (currentUser) return; // prevent double-boot
+async function bootAuthedUser(user) {
+  if (currentUser) return; // prevent double-boot (race between DOMContentLoaded + onAuthStateChange)
   currentUser = user;
   document.getElementById('auth-screen').style.display = 'none';
 
-  // Fetch profile from Supabase
-  const { data: profile } = await supa.from('profiles').select('*').eq('id', user.id).single();
+  // Fetch profile â upsert if missing (no DB trigger, so we create it from auth metadata)
+  let { data: profile } = await supa.from('profiles').select('*').eq('id', user.id).single();
+  if (!profile) {
+    const meta = user.user_metadata || {};
+    const roleFromMeta = meta.role === 'coach' ? 'coach' : 'client';
+    const { data: upserted } = await supa.from('profiles').upsert({
+      id: user.id,
+      full_name: meta.full_name || user.email,
+      role: roleFromMeta,
+      email: user.email
+    }, { onConflict: 'id' }).select().single();
+    profile = upserted;
+  }
   currentProfile = profile;
 
   const isCoach = profile?.role === 'coach';
@@ -13608,8 +13620,7 @@ async function bootAuthedUser(user) { if (currentUser) return; // prevent double
   const nn = document.getElementById('navName');
   const na = document.getElementById('navAvatar');
   if (nn) nn.textContent = profile?.full_name?.split(' ')[0] || user.email;
-  if (na) na.textContent = (profile?.full_name || user.email)[0].toUpperCase();
-
+  if (na) na.textContent = (profile?.full_name || user.email || 'U')[0].toUpperCase();
   if (isCoach) {
     // Show coach dashboard
     document.getElementById('modeBar').classList.remove('hidden');
