@@ -28,7 +28,6 @@ html.light body{background:var(--bg)}
 html.light nav{background:rgba(240,244,241,0.95)}
 html.light body::before{background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(42,125,30,0.06),transparent)}
 html.light .card-glass{background:rgba(255,255,255,0.85)}
-html.light .mode-bar{background:rgba(240,244,241,0.97)}
 html.light #mobile-nav{background:rgba(240,244,241,0.97)}
 html.light #guest-banner{background:rgba(240,244,241,0.97)}
 .theme-toggle{background:none;border:1px solid var(--border2);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--muted);transition:all 0.2s;display:flex;align-items:center}
@@ -291,18 +290,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;ali
 .al-tip-body{display:none;padding:0 1rem 0.75rem 1rem;font-size:0.8rem;color:var(--muted);line-height:1.6;border-top:1px solid var(--border)}
 .al-tip-body.open{display:block}
 /* ── SATIETY RANK STRIP ── */
-.si-rank-bar{height:8px;border-radius:99px;margin-top:0.25rem}
-
-/* ══ v14: MODE SYSTEM ══ */
-.mode-bar{position:fixed;top:58px;left:0;right:0;z-index:99;height:36px;display:flex;align-items:center;justify-content:center;gap:1rem;background:rgba(8,12,10,0.97);border-bottom:1px solid var(--border);font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase}
-.mode-btn{padding:0.2rem 0.85rem;border-radius:99px;cursor:pointer;transition:all 0.2s;user-select:none;border:1.5px solid transparent}
-.mode-btn.coach{color:var(--orange);border-color:rgba(255,140,66,0.3)}
-.mode-btn.coach.active{background:rgba(255,140,66,0.12);border-color:var(--orange)}
-.mode-btn.client{color:var(--accent);border-color:rgba(125,255,107,0.3)}
-.mode-btn.client.active{background:rgba(125,255,107,0.1);border-color:var(--accent)}
-.mode-divider{width:1px;height:18px;background:var(--border2)}
-.mode-label{color:var(--muted2);font-size:0.65rem;letter-spacing:0.05em}
-body.has-modebar .app{padding-top:94px}
+.si-rank-bar{height:8px;border-radius.mode-toggle-btn{background:transparent;border:1px solid rgba(255,140,66,0.4);border-radius:20px;padding:0.22rem 0.7rem;font-size:0.68rem;font-weight:600;color:var(--orange);cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.04em;transition:all 0.2s;white-space:nowrap}
+.mode-toggle-btn:hover{border-color:var(--orange);background:rgba(255,140,66,0.12)}
+body.coach-mode .mode-toggle-btn{color:var(--accent);border-color:rgba(125,255,107,0.4)}
+body.coach-mode .mode-toggle-btn:hover{border-color:var(--accent);background:rgba(125,255,107,0.1)}-spacing:0.05em}
 .nav-tab.tier-locked{display:none!important}
 .coach-mode .nav-tab.tier-locked{display:flex!important}
 
@@ -462,17 +453,12 @@ body.has-modebar .app{padding-top:94px}
 }
 
 @media(max-width:480px){
-  .logo{font-size:1.2rem;letter-spacing:2px}
-  .nav-tab{padding:0 0.5rem;font-size:0.6rem}
-  .client-badge span{display:none}
-  /* Hide sign-out button in nav on mobile — too small to tap reliably */
+  .logo{font-size:1.2rem;letter-spacing:2pgn-out button in nav on mobile — too small to tap reliably */
   .client-badge button{display:none}
   .page-title{font-size:1.7rem}
   .stat-row{grid-template-columns:repeat(2,1fr);gap:0.5rem}
   /* Increased bottom padding — must clear mobile nav (58px) + demo banner (63px) */
   .section{padding:1rem 0.85rem 9rem}
-  .mode-bar{height:32px;gap:0.6rem;font-size:0.65rem}
-  body.has-modebar .app{padding-top:90px}
   .tier-card .tier-body{padding:0.65rem 0.85rem 0.85rem}
   .mp-day-summary{gap:0.35rem;padding:0.6rem 0.75rem}
   .mp-meal-cals{font-size:0.72rem}
@@ -755,25 +741,9 @@ body.has-modebar .app{padding-top:94px}
     </div>
 
      Result -->
-    <div class="intake-step" id="step-6">
-      <div class="intake-step-title">You're all set! 🎉</div>
-      <div class="intake-step-sub">Based on your answers, here's your personalised starting point.</div>
-      <div id="intake-result-panel" style="margin-bottom:1.25rem"></div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:0.8rem;font-size:1rem" onclick="completeIntake()">Enter NutriCoach →</button>
-    </div>
-
-  </div><!-- /.intake-card -->
+    <div class="i!-- /.intake-card -->
 </div><!-- /.intake-overlay -->
 
-<!-- ══ MODE BAR ══ -->
-<div class="mode-bar hidden" id="modeBar">
-  <span class="mode-label">View as:</span>
-  <div class="mode-btn coach" id="modeCoach" onclick="tryCoachMode()">🔧 Coach</div>
-  <div class="mode-divider"></div>
-  <div class="mode-btn client active" id="modeClient" onclick="setMode('client')">👤 Client</div>
-  <div class="mode-divider"></div>
-  <span id="modeClientName" style="color:var(--muted);font-size:0.72rem"></span>
-</div>
 
  ──────────────────────────────────────────────── -->
 <div class="modal-overlay" id="onboardModal" style="display:none">
@@ -1040,6 +1010,7 @@ body.has-modebar .app{padding-top:94px}
   </div>
   <div class="nav-right">
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
+    <button class="mode-toggle-btn hidden" id="modeToggleBtn" onclick="toggleMode()" title="Switch view mode">🔧 Coach View</button>
     <div class="client-badge">
       <div class="avatar" id="navAvatar">R</div>
       <span id="navName">Robert B</span>
@@ -2385,9 +2356,7 @@ function completeIntake() {
   document.getElementById('intakeOverlay').classList.add('hidden');
 
   // Show mode bar
-  document.getElementById('modeBar').classList.remove('hidden');
-  document.body.classList.add('has-modebar');
-  document.getElementById('modeClientName').textContent = first;
+  
 
   // Build journey and show client view
   buildJourneyView(APP.client);
@@ -2461,9 +2430,9 @@ function showSectionFromJourney(sectionId) {
 // ── MODE SWITCHER ──────────────────────────────────────────────────────
 function setMode(mode) {
   NC.mode = mode;
-  document.getElementById('modeCoach').classList.toggle('active', mode === 'coach');
-  document.getElementById('modeClient').classList.toggle('active', mode === 'client');
   document.body.classList.toggle('coach-mode', mode === 'coach');
+  const tb = document.getElementById('modeToggleBtn');
+  if (tb) tb.textContent = mode === 'coach' ? '👤 Client View' : '🔧 Coach View';
 
   if (mode === 'coach') {
     document.getElementById('journey-view').style.display = 'none';
@@ -2561,9 +2530,7 @@ document.addEventListener('DOMContentLoaded', function() {
       NC.clientTier = profile.tier || 1;
       document.getElementById('navName').textContent = profile.name || 'Client';
       document.getElementById('navAvatar').textContent = profile.init || 'C';
-      document.getElementById('modeClientName').textContent = profile.first || '';
       document.getElementById('intakeOverlay').classList.add('hidden');
-      document.getElementById('modeBar').classList.remove('hidden');
       document.body.classList.add('has-modebar');
       buildJourneyView(profile);
       setMode('client');
@@ -13600,8 +13567,8 @@ function doSignOut() {
   currentUser = null;
   currentProfile = null;
   APP.client = null; APP.macros = null; APP.phase = null;
-  const mb = document.getElementById('modeBar');
-  if (mb) { mb.classList.add('hidden'); document.body.classList.remove('has-modebar'); }
+  const tb = document.getElementById('modeToggleBtn');
+  if (tb) tb.classList.add('hidden');
   document.getElementById('auth-loading').style.display = 'none';
   document.getElementById('auth-form-wrapper').style.display = '';
   document.getElementById('auth-screen').style.display = 'flex';
@@ -13644,8 +13611,8 @@ async function bootAuthedUser(user) {
 
   if (isCoach) {
     // Load all coach data, THEN reveal dashboard
-    document.getElementById('modeBar').classList.remove('hidden');
-    document.body.classList.add('has-modebar');
+    const tb = document.getElementById('modeToggleBtn');
+    if (tb) tb.classList.remove('hidden');
     await loadCoachDashboard();
     document.getElementById('auth-screen').style.display = 'none';
     setMode('coach');
@@ -13690,15 +13657,13 @@ async function loadClientDataFromSupabase(clientId) {
   }
   if (progress) APP.progressCheckpoints = progress;
 
-    const mb = document.getElementById('modeBar');
-  const io = document.getElementById('intakeOverlay');
+    const io = document.getElementById('intakeOverlay');
   const authScreen = document.getElementById('auth-screen');
 
   if (APP.client) {
     // ── Returning client: build dashboard then reveal — re blank flash ──
     if (io) io.classList.add('hidden');
-    if (mb) mb.classList.remove('hidden');
-    document.body.classList.add('has-modebar');
+    // client data loaded — toggle button stays hidden (clients don't see it)
     const profile = { name: APP.client.name, tier: APP.client.tier || 1, init: (APP.client.name||'C')[0], first: APP.client.name?.split(' ')[0] };
     buildJourneyView(profile);
     setMode('client');
@@ -14010,18 +13975,13 @@ async function viewCurrentModalClient() {
 
 async function viewClientAsCoach(clientId) {
   await loadClientDataFromSupabase(clientId);
-  // Add a "back to coach dashboard" button to the mode bar
-  const mb = document.getElementById('modeBar');
-  if (mb && !document.getElementById('back-to-coach-btn')) {
-    const btn = document.createElement('button');
-    btn.id = 'back-to-coach-btn';
-    btn.className = 'btn btn-sm';
-    btn.style.cssText = 'font-size:0.72rem;padding:0.25rem 0.65rem;border-color:rgba(125,255,107,0.3);color:var(--accent)';
-    btn.textContent = '← All Clients';
-    btn.onclick = () => { btn.remove(); setMode('coach'); };
-    mb.appendChild(btn);
-  }
+  // Temporarily repurpose the nav toggle button as a “back to coach” action
   setMode('client');
+  const tb = document.getElementById('modeToggleBtn');
+  if (tb) {
+    tb.textContent = '← All Clients';
+    tb.onclick = () => { tb.onclick = toggleMode; setMode('coach'); };
+  }
   showToast('Viewing ' + (APP.client?.name || 'client') + '\'s profile');
 }
 
@@ -14051,8 +14011,8 @@ supa.auth.onAuthStateChange(async (event, session) => {
     await bootAuthedUser(session.user);
   } else if (event === 'SIGNED_OUT') {
     currentUser = null; currentProfile = null;
-    const mb = document.getElementById('modeBar');
-    if (mb) { mb.classList.add('hidden'); document.body.classList.remove('has-modebar'); }
+    const tb = document.getElementById('modeToggleBtn');
+    if (tb) tb.classList.add('hidden');
     document.getElementById('auth-loading').style.display = 'none';
     document.getElementById('auth-form-wrapper').style.display = '';
     document.getElementById('auth-screen').style.display = 'flex';
@@ -14155,8 +14115,7 @@ function loadGuestData() {
     if (intake) intake.classList.add('hidden');
 
     // Show the mode bar
-    const modeBar = document.getElementById('modeBar');
-    if (modeBar) { modeBar.classList.remove('hidden'); document.body.classList.add('has-modebar'); }
+    // Demo mode is client-only — no coach toggle shown
 
     // Switch to client mode and show journey
     if (typeof setMode === 'function') setMode('client');
@@ -14881,6 +14840,12 @@ function tryCoachMode() {
   } else {
     showToast('Coach access only');
   }
+}
+
+// ── NAV TOGGLE BUTTON handler ──────────────────────────────
+function toggleMode() {
+  if (NC.mode === 'coach') setMode('client');
+  else tryCoachMode();
 }
 
 // Close client modal on Escape key
