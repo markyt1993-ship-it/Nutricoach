@@ -2317,7 +2317,7 @@ function buildIntakeResult() {
     </div>`;
 }
 
-function completeIntake() {
+async function completeIntake() {
   // Use name from auth session, not a form field
   const name  = currentProfile?.full_name || currentUser?.email?.split('@')[0] || 'Client';
   const email = currentUser?.email || '';
@@ -3275,6 +3275,14 @@ function createClient() {
   document.getElementById('onboardModal').style.display = 'none';
   refreshAll();
   showToast(`Welcome, ${name}! Macros calculated ✓`);
+  if (currentUser) {
+    const saved = await saveToSupabase();
+    if (!saved) {
+      showToast('⚠️ Could not save to server. Please check your connection.', 6000);
+    } else {
+      await autoLinkClientToCoach();
+    }
+  }
 }
 
 function showModal() { document.getElementById('onboardModal').style.display='flex'; }
@@ -13683,7 +13691,7 @@ async function loadClientDataFromSupabase(clientId) {
 
 // ── Save to Supabase ────────────────────────────────────────────
 async function saveToSupabase() {
-  if (!currentUser) { saveState(); return; }
+  if (!currentUser) { saveState(); return false; }
   const clientId = currentUser.id;
   const { error } = await supa.from('client_data').upsert({
     client_id: clientId,
@@ -13692,10 +13700,19 @@ async function saveToSupabase() {
     phase: APP.phase,
     updated_at: new Date().toISOString()
   }, { onConflict: 'client_id' });
-  if (error) {
-    console.error('Save failed:', error);
-    showToast('⚠️ Save failed — your data is stored locally and will sync when connection is restored', 4000);
-  }
+  if (error) { console.error('Supabase save failed:', error); return false; }
+  return true;
+}
+
+async function autoLinkClientToCoach() {
+  if (!currentUser || currentProfile?.coach_id) return;
+  try {
+    const { data: coaches } = await supa.from('profiles').select('id').eq('role', 'coach').limit(1);
+    if (coaches?.length) {
+      await supa.from('profiles').update({ coach_id: coaches[0].id }).eq('id', currentUser.id);
+      if (currentProfile) currentProfile.coach_id = coaches[0].id;
+    }
+  } catch(e) { console.warn('autoLinkClientToCoach failed:', e); }
 }
 
 async function saveCheckinToSupabase(checkinData) {
@@ -13748,7 +13765,6 @@ async function loadCoachDashboard() {
   const { data: clients } = await supa
     .from('profiles')
     .select('id, full_name, email, created_at, client_data(macros, phase, updated_at, intake), checkins(avg_weight, week_start, created_at, adherence, hunger, energy, sleep, adjustment)')
-    .eq('coach_id', currentUser.id)
     .eq('role', 'client');
 
   allCoachClients = clients || [];
